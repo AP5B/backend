@@ -2,13 +2,12 @@ name: Auto-Increment Version on PR Merge
 
 on:
   pull_request:
-    types: [closed]  # Solo cuando se cierra el PR
+    types: [closed] # Solo cuando se cierra el PR
     branches:
       - main
-      - develop
 
 permissions:
-  contents: write  # Permite commits y push con GITHUB_TOKEN
+  contents: write # Permite commits y push con GITHUB_TOKEN
 
 jobs:
   version-bump:
@@ -39,7 +38,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Incrementar versión según rama base 
+      # Incrementar versión según rama base
       - name: Increment version
         run: |
           BRANCH="${{ github.event.pull_request.base.ref }}"
@@ -52,9 +51,6 @@ jobs:
           if [[ "$BRANCH" == "main" ]]; then
             echo "Bumping minor version"
             npm version minor -m "Bump version to %s"
-          elif [[ "$BRANCH" == "develop" ]]; then
-            echo "Bumping patch version"
-            npm version patch -m "Bump version to %s"
           fi
 
           # Subir commit y tags

@@ -27,21 +27,14 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            echo "🚀 Conectado a la EC2, iniciando despliegue..."
             cd /home/ubuntu/ap-5b-backend
 
             git config --global --add safe.directory /home/ubuntu/ap-5b-backend
 
-            echo "📦 Actualizando código desde main..."
             sudo git pull origin main
 
-            echo "🧹 Deteniendo contenedores anteriores..."
             npm run docker-prod-down || true
 
-            echo "🔧 Construyendo y levantando nuevos contenedores..."
             npm run docker-prod
 
-            echo "🩺 Verificando estado de contenedores..."
             docker ps
-
-            echo "✅ Despliegue completado con éxito en la instancia EC2."
