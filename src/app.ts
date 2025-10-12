@@ -7,7 +7,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
 import registerRoutes from "./routes/registerRoutes";
 import loginRoutes from "./routes/loginRoutes";
-import classRoutes from "./routes/classRoutes"
+import classRoutes from "./routes/classOfferRoutes"
 import cookieParser from "cookie-parser";
 
 // Swagger setup

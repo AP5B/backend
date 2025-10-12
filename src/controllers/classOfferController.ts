@@ -2,12 +2,15 @@ import { Request, Response } from "express"
 import { 
   getClassOffersService, 
   getClassOfferByIdService, 
-  classOfferRequestBody, 
-  destroyClassOfferService, 
-  editClassOfferRequestBody
-} from "../services/classServices"
+  createClassOfferService,
+  editClassOfferService,
+  destroyClassOfferService,
+  classOfferQuery,
+  Category, 
+  
+} from "../services/classOfferServices"
 import { HttpError } from "../middlewares/errorHandler"
-import { createClassOfferService, editClassOfferService} from "../services/classServices"
+import { classOfferRequestBody, editClassOfferRequestBody, categories} from "../services/classOfferServices"
 import { type } from "os"
 
 const validateClassOfferBody = (body: classOfferRequestBody) => {
@@ -19,9 +22,11 @@ const validateClassOfferBody = (body: classOfferRequestBody) => {
     throw new HttpError(400, "El precio no puede estar vacío");
   if (typeof body.price != "number")
     throw new HttpError(400, "El precio debe ser un numero");
+  if (body.category && !categories.includes(body.category) )
+    throw new HttpError(400, "Categoría invalida")
 }
 
-const validateEditClassOfferBody = (body: editClassOfferRequestBody) => {
+const validateEditClassOfferRequestBody = (body: editClassOfferRequestBody) => {
   if (!(body.title || body.description || body.price))
     throw new HttpError(400, "La solicitud debe tener al menos un campo a editar.")
   if (body.title !== undefined && !body.title?.trim())
@@ -29,28 +34,41 @@ const validateEditClassOfferBody = (body: editClassOfferRequestBody) => {
   if (body.description !== undefined && !body.description?.trim())
     throw new HttpError(400, "La descripción no puede estar vacía");
   if (body.price !== undefined && typeof body.price != "number")
-    throw new HttpError(400, "El precio debe ser un numero");
+    throw new HttpError(400, "El precio debe ser un numero")
+  if (body.category !== undefined && !categories.includes(body.category))
+    throw new HttpError(400, "Categoría invalida")
 }
 
 export const getClassOffersController = async (req: Request, res: Response) => {
-  const pageParam = Number(req.query.page);
-  const limitParam = Number(req.query.limit);
-  let page: number;
-  let limit: number;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  let normPage = (page > 0) ? page : 1
+  let normLimit = (limit > 0) ? limit : 10
 
-  if (!isNaN(pageParam) && pageParam >= 1){
-    page = pageParam
-  }
-  else { page = 1 } // default page es 1
+  const query: classOfferQuery = {}
 
-  if (!isNaN(limitParam) && limitParam >= 1){
-    limit = pageParam
-  }
-  else { limit = 10;} // default limit es 10
+  // sanitizando
+  const { title, category, price, minPrice, maxPrice } = req.query;
 
-  const classOffers = await getClassOffersService(page, limit);
+
+  if (typeof title === "string" && title)    query.title = title;
+  if (typeof price === "string" && price)    query.price = parseInt(price);
+  if (typeof minPrice === "string" && minPrice) query.minPrice = parseInt(minPrice);
+  if (typeof maxPrice === "string" && maxPrice) query.maxPrice = parseInt(maxPrice);
+  if (typeof category === "string"  && categories.includes(category as Category))
+    query.category = category as Category;
   
-  res.status(200).json(classOffers)
+  const [classOffers, totalItems, totalPages] = await getClassOffersService(normPage, normLimit, query);
+
+  res.status(200).json({
+    data: classOffers,
+    pagination: {
+      page: normPage,
+      limit: normLimit,
+      totalItems: totalItems,
+      totalPages: totalPages,
+    }
+  })
 }
 
 export const getClassOfferByIdController = async (req: Request, res: Response) => {
@@ -69,13 +87,15 @@ export const createClassOfferController = async (req: Request, res: Response) =>
 
   validateClassOfferBody(reqBody);
 
-  const {title, description, price} = reqBody;
+  const {title, description, price, category} = reqBody;
 
   // de todos modos el service igual sanitiza
   const sanitizedBody: classOfferRequestBody = {
     title, description, price,
     authorId: userId
   }
+  // si en la request no hay categoria se ocupa el default que define prisma (Otro)
+  if (category) sanitizedBody.category = category;
 
   const classOffer = await createClassOfferService(sanitizedBody);
 
@@ -89,14 +109,15 @@ export const editClassOfferController = async (req: Request, res: Response) => {
   
   if (isNaN(classId))
     throw new HttpError(400, "La id, de la oferta de clase, debe ser un número.");
-  validateEditClassOfferBody(reqBody);
+  validateEditClassOfferRequestBody(reqBody);
 
   const sanitizedBody: editClassOfferRequestBody = {
     id: classId
   }
   if(reqBody.title)       sanitizedBody.title = reqBody.title;
-  if(reqBody.price)       sanitizedBody.price = reqBody.price
-  if(reqBody.description) sanitizedBody.description = reqBody.description
+  if(reqBody.price)       sanitizedBody.price = reqBody.price;
+  if(reqBody.description) sanitizedBody.description = reqBody.description;
+  if(reqBody.category)    sanitizedBody.category = reqBody.category;
 
   const classOffer = await editClassOfferService(userId, sanitizedBody)
 
@@ -112,5 +133,8 @@ export const deleteClassOfferController = async (req: Request, res: Response) =>
 
   const deleteClass = await destroyClassOfferService(userId, classId);
 
-  res.status(200).send(deleteClass);
+  res.status(200).send({
+    deleted: deleteClass,
+    message: "Oferta de clase eliminada con éxito."
+  });
 }

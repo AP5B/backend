@@ -5,7 +5,7 @@ import {
   createClassOfferController,
   editClassOfferController,
   deleteClassOfferController
-} from "../controllers/classController"
+} from "../controllers/classOfferController"
 import { authenticate, autorize } from "../middlewares/authMiddleware";
 
 const router = Router();
@@ -37,6 +37,7 @@ const router = Router();
  *           example: 2025-10-07T22:51:55.000Z
  *         category:
  *           type: string
+ *           enum: [Calculo, Dinamica, Economia, Quimica, Computacion, Otro]
  *           example: Otro
  *   securitySchemes:
  *     cookieAuth:
@@ -66,16 +67,17 @@ const router = Router();
  *                 properties:
  *                   message:
  *                     type: string
- *                     example: Esta es una ruta protegida, acceso exitoso
+ *                     example: Esta es una ruta protegida, acceso exitoso.
  *         401:
  *           description: El usuario no tiene los permisos suficientes
  *           content:
  *             application/json:
- *               schema: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Usuario no tiene rol Teacher.
+ *               schema:
+ *                 type: object
+ *                 properties:
+ *                   message:
+ *                     type: string
+ *                     example: Usuario no tiene rol Teacher.
  */
 router.get("/protected", authenticate, autorize("Teacher"), (req: Request,res: Response) => {
   res.status(200).json({
@@ -88,7 +90,7 @@ router.get("/protected", authenticate, autorize("Teacher"), (req: Request,res: R
  * /class-offer:
  *   get:
  *     summary: Ofertas de clase paginado
- *     description: Retorna una arreglo de tamaño `limit` con ofertas de clase.
+ *     description: Retorna una arreglo de tamaño `limit` con ofertas de clase
  *     tags:
  *       - Class Offer
  *     parameters:
@@ -107,6 +109,37 @@ router.get("/protected", authenticate, autorize("Teacher"), (req: Request,res: R
  *           default: 10
  *         description: Cantidad de elementos por página
  *         required: false
+ *       - in: query
+ *         name: title
+ *         schema:
+ *           type: string
+ *         description: String contenido en el titulo
+ *         required: false
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *           enum: [Calculo, Dinamica, Economia, Quimica, Computacion, Otro]
+ *         description: Categoria de la oferta
+ *         required: false
+ *       - in: query
+ *         name: price
+ *         schema:
+ *           type: number
+ *         description: Precio exacto
+ *         required: false
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *         description: Precio mínimo
+ *         required: false
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *         description: Precio máximo
+ *         required: false
  *     responses:
  *       200:
  *         description: Registros encontrados
@@ -115,7 +148,25 @@ router.get("/protected", authenticate, autorize("Teacher"), (req: Request,res: R
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/classOffer'
+ *                 type: object
+ *                 properties:
+ *                   data:
+ *                     $ref: "#/components/schemas/classOffer"
+ *                   pagination:
+ *                     type: object
+ *                     properties:
+ *                       page:
+ *                         type: number
+ *                         example: 1
+ *                       limit:
+ *                         type: number
+ *                         example: 10
+ *                       totalItems:
+ *                         type: number
+ *                         example: 34
+ *                       totalPages:
+ *                         type: number
+ *                         example: 4
  */
 router.get("/", getClassOffersController)
 
@@ -146,29 +197,32 @@ router.get("/", getClassOffersController)
  *         description: Error en los datos de entrada
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: La id, de la oferta de clase, debe ser un número.
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La id, de la oferta de clase, debe ser un número.
  *       404:
  *         description: No se encontro la clase con id `classId`
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: No existe una oferta de clase con id 1
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: No existe una oferta de clase con id 1
  *       500:
  *         description: Error interno del servidor
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: Error interno del servidor
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error interno del servidor
  */
 router.get("/:classId", getClassOfferByIdController);
 
@@ -182,17 +236,10 @@ router.get("/:classId", getClassOfferByIdController);
  *       - Class Offer
  *     security:
  *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: classId
- *         required: true
- *         schema:
- *           type: integer
- *           description: Id de la oferta de clase
  *     requestBody:
  *       required: true
  *       content:
- *         applicatio/json:
+ *         application/json:
  *           schema:
  *             type: object
  *             required:
@@ -203,10 +250,10 @@ router.get("/:classId", getClassOfferByIdController);
  *               title:
  *                 type: string
  *                 example: Clases de Teoria de Autómatas
- *               descrition:
+ *               description:
  *                 type: string
  *                 example: Soy ayudante de Teoria de Autómatas...
- *               prince:
+ *               price:
  *                 type: integer
  *                 example: 25000
  *     responses:
@@ -220,29 +267,32 @@ router.get("/:classId", getClassOfferByIdController);
  *         description: Error en los datos de entrada
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: El titulo no puede estar vacío
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: El titulo no puede estar vacío
  *       401:
  *         description: El usuario no tiene los permisos suficientes
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: Usuario no tiene rol Teacher
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no tiene rol Teacher
  *       500:
  *         description: Error interno del servidor
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: Error interno del servidor
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error interno del servidor
  */
 router.post("/", authenticate, autorize("Teacher"), createClassOfferController);
 
@@ -283,45 +333,49 @@ router.post("/", authenticate, autorize("Teacher"), createClassOfferController);
  *       200:
  *         description: Recurso editado con éxito
  *         content:
- *           applicarion/json:
+ *           application/json:
  *             schema:
  *               $ref: "#/components/schemas/classOffer"
  *       400:
  *         description: Error en los datos de entrada
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: La id, de la oferta de clase, debe ser un número.
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La id, de la oferta de clase, debe ser un número.
  *       401:
  *         description: El usuario no tiene los permisos suficientes
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: El recurso no pertenece al usuario.
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: El recurso no pertenece al usuario.
  *       404:
  *         description: No se encontro la clase con id `classId`
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: No existe una oferta de clase con id 1
+ *             schema:
+ *               tpye: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: No existe una oferta de clase con id 1
  *       500:
  *         description: Error interno del servidor
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: Error interno del servidor
+ *             schema:
+ *               tpye: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error interno del servidor
  */
 router.patch("/:classId", authenticate, autorize("Teacher"), editClassOfferController);
 
@@ -341,46 +395,60 @@ router.patch("/:classId", authenticate, autorize("Teacher"), editClassOfferContr
  *         required: true
  *         schema:
  *           type: integer
- *           description: Id de la oferta de clase
+ *           description: Id de la oferta de clase.
  *     responses:
  *       200:
- *         description: Usuario eliminado con exito
+ *         description: Usuario eliminado con exito.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 deleted:
+ *                   $ref: "#/components/schemas/classOffer"
+ *                 message:
+ *                   type: string
+ *                   example: Usuario eliminado con éxito.
  *       400:
  *         description: Error en los datos de entrada
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: La id, de la oferta de clase, debe ser un número.
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La id, de la oferta de clase, debe ser un número.
  *       401:
- *         description: El usuario no tiene los permisos suficientes
+ *         description: El usuario no tiene los permisos suficientes.
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: El recurso no pertenece al usuario.
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: El recurso no pertenece al usuario.
  *       404:
- *         description: No se encontro la clase con id `classId`
+ *         description: No se encontro la clase con id `classId`.
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: No existe una oferta de clase con id 1
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: No existe una oferta de clase con id 1.
  *       500:
- *         description: Error interno del servidor
+ *         description: Error interno del servidor.
  *         content:
  *           application/json:
- *             schema: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: Error interno del servidor
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error interno del servidor.
  */
 router.delete("/:classId", authenticate, autorize("Teacher"), deleteClassOfferController);
 

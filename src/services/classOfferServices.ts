@@ -1,13 +1,20 @@
-import { PrismaClient, User } from "@prisma/client";
+import { Prisma, PrismaClient, User } from "@prisma/client";
 import { kStringMaxLength } from "buffer";
 import { HttpError } from "../middlewares/errorHandler";
 
 const prisma = new PrismaClient();
 
+export const categories = [
+  "Calculo", "Dinamica", "Economia", "Quimica", "Computacion", "Otro",
+] as const;
+
+export type Category = typeof categories[number];
+
 export interface classOfferRequestBody {
   title: string;
   description: string;
   price: number;
+  category?: Category;
   authorId: number;
 }
 
@@ -15,18 +22,64 @@ export interface editClassOfferRequestBody {
   id: number;
   title?: string;
   description?: string;
+  category?: Category;
   price?: number;
 }
 
-export const getClassOffersService = async (page: number, limit: number) => {
+export interface classOfferQuery {
+  title?: string;
+  category?: Category;
+  price?: number;
+  minPrice?: number;
+  maxPrice?: number;
+}
+
+/**
+ * busca y pagina una query para classOffer, entrega el total de iteam y paginas.
+ * @param page 
+ * @param limit 
+ * @param query 
+ * @returns [result, totalItems, totalPage]
+ */
+export const getClassOffersService = async (page: number, limit: number, query: classOfferQuery) => {
   try {
-    return await prisma.classOffer.findMany(
-      {
+    // parsing price filter
+    let filterPrice: any;
+    if (query.price){
+     filterPrice = query.price 
+    }
+    else if (query.minPrice || query.maxPrice) {
+      filterPrice = {
+        gte: query.minPrice,
+        lte: query.maxPrice,
+      }
+    }
+
+    const filter = {
+      ...(query.title ? {title : {
+        contains: query.title,
+        mode: Prisma.QueryMode.insensitive,
+      }} : {}),
+      ...(query.category ? {category : query.category} : {}),
+      ...(filterPrice ? {price: filterPrice} : {})
+    }
+
+    // query
+    const result = await prisma.classOffer.findMany({
         skip: (page - 1) * limit,
-        take: limit
+        take: limit,
+        where: filter
       }
     )
+
+    const totalItems = await prisma.classOffer.count({ where: filter })
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return [result, totalItems, totalPages];
+
   } catch (error) {
+    console.log(error)
     throw new HttpError(500, "Error interno del servidor");
   }
 };
@@ -59,6 +112,7 @@ export const createClassOfferService = async (
         title: reqBody.title,
         description: reqBody.description,
         price: reqBody.price,
+        ...(reqBody.category ? {category : reqBody.category} : {}), // inserta category si es que la reqBody lo contiene
         author: { connect: { id: reqBody.authorId } }
       }
     })
@@ -92,7 +146,7 @@ export const editClassOfferService = async (
       data: updateData
     })
 
-    return classOffer
+    return updateClassOffer
   } catch (error: any) {
     if (error instanceof HttpError) throw error
     if (error.code === "P2025") throw new HttpError(404, `No existe una oferta de clase con id ${reqBody.id}`)
