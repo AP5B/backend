@@ -11,7 +11,6 @@ import {
 } from "../services/classOfferServices"
 import { HttpError } from "../middlewares/errorHandler"
 import { classOfferRequestBody, editClassOfferRequestBody, categories} from "../services/classOfferServices"
-import { type } from "os"
 
 const validateClassOfferBody = (body: classOfferRequestBody) => {
   if (!body.title?.trim())
@@ -42,8 +41,8 @@ const validateEditClassOfferRequestBody = (body: editClassOfferRequestBody) => {
 export const getClassOffersController = async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
-  let normPage = (page > 0) ? page : 1
-  let normLimit = (limit > 0) ? limit : 10
+  const normPage = (page > 0) ? page : 1
+  const normLimit = (limit > 0) ? limit : 10
 
   const query: classOfferQuery = {}
 
@@ -51,13 +50,24 @@ export const getClassOffersController = async (req: Request, res: Response) => {
   const { title, category, price, minPrice, maxPrice } = req.query;
 
 
-  if (typeof title === "string" && title)    query.title = title;
-  if (typeof price === "string" && price)    query.price = parseInt(price);
-  if (typeof minPrice === "string" && minPrice) query.minPrice = parseInt(minPrice);
-  if (typeof maxPrice === "string" && maxPrice) query.maxPrice = parseInt(maxPrice);
+  if (typeof title === "string")    query.title = title;
+  if (typeof price === "string")   {
+    const parse = parseInt(price)
+    if (!isNaN(parse)) query.price = parse
+  }
+  if (typeof minPrice === "string") {
+    const parse = parseInt(minPrice)
+    if (!isNaN(parse)) query.minPrice = parse
+  }
+  if (typeof maxPrice === "string") {
+    const parse = parseInt(maxPrice)
+    if (!isNaN(parse)) query.maxPrice = parse
+  }
   if (typeof category === "string"  && categories.includes(category as Category))
     query.category = category as Category;
   
+  console.log(query)
+
   const [classOffers, totalItems, totalPages] = await getClassOffersService(normPage, normLimit, query);
 
   res.status(200).json({

@@ -12,4 +12,5 @@ export const setUserRole = (userId: number, rol: Rol) => {
       role: rol
     }
   })
+  return user
 }

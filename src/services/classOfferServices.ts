@@ -1,5 +1,4 @@
-import { Prisma, PrismaClient, User } from "@prisma/client";
-import { kStringMaxLength } from "buffer";
+import { Prisma, PrismaClient} from "@prisma/client";
 import { HttpError } from "../middlewares/errorHandler";
 
 const prisma = new PrismaClient();
@@ -44,14 +43,14 @@ export interface classOfferQuery {
 export const getClassOffersService = async (page: number, limit: number, query: classOfferQuery) => {
   try {
     // parsing price filter
-    let filterPrice: any;
+    let filterPrice: number | {gte?: number, lte?: number} | undefined;
     if (query.price){
      filterPrice = query.price 
     }
     else if (query.minPrice || query.maxPrice) {
       filterPrice = {
-        gte: query.minPrice,
-        lte: query.maxPrice,
+        ...(query.minPrice ? {gte: query.minPrice} : {}),
+        ...(query.minPrice ? {lte: query.maxPrice} : {}),
       }
     }
 
@@ -117,6 +116,7 @@ export const createClassOfferService = async (
       }
     })
   } catch (error) {
+    console.log(error)
     throw new HttpError(500, "Error interno en el servidor.")
   }
 }
@@ -147,9 +147,9 @@ export const editClassOfferService = async (
     })
 
     return updateClassOffer
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof HttpError) throw error
-    if (error.code === "P2025") throw new HttpError(404, `No existe una oferta de clase con id ${reqBody.id}`)
+    console.log(error)
     throw new HttpError(500, "Error interno del servidor");
   }
 }
@@ -175,8 +175,9 @@ export const destroyClassOfferService = async (userId: number, classOfferId: num
 
     return deleteClassOffer
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof HttpError) throw error
+    console.log(error)
     throw new HttpError(500, "Error interno del servidor");
   }
 }
