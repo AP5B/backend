@@ -8,7 +8,7 @@
     "docker-build": "docker compose -f docker-compose-dev.yml up --build",
     "docker-prod": "docker-compose -f docker-compose-prod.yml up -d --build",
     "docker-prod-down": "docker-compose -f docker-compose-prod.yml down",
-    "build": "tsc",
+    "build": "tsc -p tsconfig-build.json",
     "start": "node dist/index.js",
     "dev": "DEBUG=myapp:* nodemon --watch 'src/**/*.ts' --exec 'tsx' src/index.ts",
     "lint": "eslint 'src/**/*.ts'",
