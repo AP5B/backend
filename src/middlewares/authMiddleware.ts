@@ -10,6 +10,17 @@ export interface TokenPayload {
   username: string;
 }
 
+interface AuthUser {
+  id: string;
+  email: string;
+  role: string;
+  username: string;
+}
+
+/**
+ * Valida Acces Token
+ * Guarda en `res.locals.user` los datos del usuario 
+ */
 export const authenticate = (
   req: Request,
   res: Response,
@@ -25,8 +36,9 @@ export const authenticate = (
       id: decoded.id,
       email: decoded.email,
       role: decoded.role,
-      profile_picture: decoded.username,
-    };
+      username: decoded.username,
+    } as AuthUser;
+
     next();
   } catch (error) {
     let errorMessage = "Token inválido o expirado.";
@@ -45,3 +57,20 @@ export const authenticate = (
     throw new HttpError(401, errorMessage);
   }
 };
+
+/**
+ * Verifica que el `rol` del **usuario** este incluido en `roles`
+ */
+export const autorize = (
+  ...roles: string[]
+) => (
+  req: Request, res: Response, next: NextFunction
+) => {
+  const userRol = res.locals.user.role
+
+  if (!roles.includes(userRol)) {
+    throw new HttpError(401, `Usuario no tiene rol: ${roles.join(", ")}.`);
+  }
+
+  next();
+}

@@ -1,0 +1,58 @@
+name: Auto-Increment Version on PR Merge
+
+on:
+  pull_request:
+    types: [closed] # Solo cuando se cierra el PR
+    branches:
+      - main
+
+permissions:
+  contents: write # Permite commits y push con GITHUB_TOKEN
+
+jobs:
+  version-bump:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout del repo (usa GITHUB_TOKEN automáticamente)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      # Configurar Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Instalar dependencias
+      - name: Install dependencies
+        run: npm ci
+
+      # Configurar Git
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Incrementar versión según rama base
+      - name: Increment version
+        run: |
+          BRANCH="${{ github.event.pull_request.base.ref }}"
+          echo "Merged into branch: $BRANCH"
+
+          # Hacer pull rebase para evitar conflictos si hubo merges recientes
+          git pull --rebase origin "$BRANCH"
+
+          # Incrementar versión según rama
+          if [[ "$BRANCH" == "main" ]]; then
+            echo "Bumping minor version"
+            npm version minor -m "Bump version to %s"
+          fi
+
+          # Subir commit y tags
+          git push
+          git push --tags
