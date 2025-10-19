@@ -36,7 +36,7 @@
   },
   "homepage": "https://github.com/FinzoYFunzo/ap-5b-backend#readme",
   "dependencies": {
-    "@prisma/client": "^6.16.3",
+    "@prisma/client": "^6.17.1",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -64,7 +64,7 @@
     "jest": "^30.2.0",
     "nodemon": "^3.1.10",
     "prettier": "3.6.2",
-    "prisma": "^6.16.3",
+    "prisma": "^6.17.1",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.4",
     "ts-node": "^10.9.2",
