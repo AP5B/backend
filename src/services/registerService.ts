@@ -14,7 +14,7 @@ export interface registerRequestBody {
   last_name_2?: string;
   email: string;
   password: string;
-  role?: UserRole;
+  role: UserRole;
   phone?: string;
   confirm_password: string;
 }
@@ -30,7 +30,7 @@ export const registerUserService = async (
     });
 
     if (existingUser) {
-      throw new HttpError(409, "Nombre de usuario o email ya en uso.");
+      throw new HttpError(409, "Nombre de usuario o email ya está en uso.");
     }
 
     const hashedPassword = await bcrypt.hash(regBody.password, 10);
