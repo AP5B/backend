@@ -42,6 +42,7 @@ This will build a Docker image from the source code, create a container with Pos
    # Application
    PORT=3000
    NODE_ENV=development
+   ALLOWED_ORIGINS="http://localhost:5173,https://frontend-software-eight.vercel.app/"
    ```
 
 2. **Database Setup**: Create a PostgreSQL user and database:
