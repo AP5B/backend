@@ -43,6 +43,7 @@ export const createApp = () => {
         }
         return callback(null, true);
       },
+      credentials: true,
     }),
   );
 
