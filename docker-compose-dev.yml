@@ -12,6 +12,8 @@ services:
       - /usr/src/app/node_modules
     networks:
       - prisma-network
+    environmet:
+      DATABASE_URL: "postgresql://postgres:prisma@postgres_db:5432/postgres?schema=public"
 
   prisma-studio:
     image: node:slim
