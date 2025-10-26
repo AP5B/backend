@@ -45,7 +45,8 @@ model User {
   phone           String?
   isDeleted       Boolean         @default(false)
   classOffers     ClassOffer[]
-  classRequests   ClassRequest[]  
+  classRequests   ClassRequest[]
+  availabilities  Availability[] 
   writtenReviews  Review[]        @relation("Reviewer")
   receivedReviews Review[]        @relation("Teacher")
 }
@@ -90,4 +91,13 @@ model Review {
   rating      Int
   content     String?
   createdAt   DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model Availability {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  from        String
+  to          String
+  day         Int
 }
