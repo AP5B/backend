@@ -1,11 +1,12 @@
-import { UserRole, PrismaClient } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 import { HttpError } from "../middlewares/errorHandler";
 import bcrypt from "bcrypt";
 import jwt, { TokenExpiredError } from "jsonwebtoken";
 import env from "../config/env";
 import { generateTokens } from "../utils/setAuthCookies";
+import PrismaManager from "../utils/prismaManager";
 
-const prisma = new PrismaClient();
+const prisma = PrismaManager.GetClient();
 
 export interface registerRequestBody {
   username: string;

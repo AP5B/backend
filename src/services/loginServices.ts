@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
-import { PrismaClient } from "@prisma/client";
 import { HttpError } from "../middlewares/errorHandler";
+import PrismaManager from "../utils/prismaManager";
 
-const prisma = new PrismaClient();
+const prisma = PrismaManager.GetClient();
 
 export interface loginRequestBody {
   login: string;
@@ -33,6 +33,7 @@ export const loginUserService = async (logBody: loginRequestBody) => {
     if (error instanceof HttpError) {
       throw error;
     }
+    console.log(error);
     throw new HttpError(500, "Error interno del servidor");
   }
   // insert to db
