@@ -8,7 +8,7 @@ This can be achive by creating a `.env` file with the following:
 
 ```env
 # Database
-DATABASE_URL="postgresql://postgres:prisma@postgres_db:5432/postgres?schema=public"
+DATABASE_URL="postgresql://postgres:prisma@localhost:5433/postgres?schema=public"
 
 # Application
 PORT=3000
@@ -42,6 +42,7 @@ This will build a Docker image from the source code, create a container with Pos
    # Application
    PORT=3000
    NODE_ENV=development
+   ALLOWED_ORIGINS="http://localhost:5173,https://frontend-software-eight.vercel.app"
    ```
 
 2. **Database Setup**: Create a PostgreSQL user and database:
@@ -68,3 +69,20 @@ This will build a Docker image from the source code, create a container with Pos
    ```bash
    npx prisma generate
    ```
+
+## Testing
+
+Run the test suite using Jest with Testcontainers for database testing, you need.
+**Ensure you have Docker Desktop running on your machine**
+
+```bash
+npm run test
+```
+
+### Running Specific Tests (Recommended)
+
+You can run specific test files or directories using Jest:
+
+```bash
+npm run test:only -- "./__tests__/integration/someTestFile.test.ts"
+```

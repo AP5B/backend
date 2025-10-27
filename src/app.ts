@@ -7,8 +7,9 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
 import registerRoutes from "./routes/registerRoutes";
 import loginRoutes from "./routes/loginRoutes";
-import classRoutes from "./routes/classOfferRoutes"
+import classRoutes from "./routes/classOfferRoutes";
 import cookieParser from "cookie-parser";
+import env from "./config/env";
 
 // Swagger setup
 const options = {
@@ -27,7 +28,24 @@ const swaggerSpec = swaggerJSDoc(options);
 export const createApp = () => {
   const app = express();
 
-  app.use(cors());
+  const allowedOrigins = env.allowedOrigins?.split(",") || [];
+
+  app.use(
+    cors({
+      origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) === -1) {
+          const msg =
+            "The CORS policy for this site does not " +
+            "allow access from the specified Origin.";
+          return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+      },
+      credentials: true,
+    }),
+  );
 
   app.use(express.json()); // body parser
   app.use(cookieParser());
@@ -36,7 +54,7 @@ export const createApp = () => {
   app.use("/", healthRoutes);
   app.use("/", registerRoutes);
   app.use("/", loginRoutes);
-  app.use("/class-offer/", classRoutes)
+  app.use("/class-offer/", classRoutes);
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // Swagger
 
   app.use(errorHandler);
