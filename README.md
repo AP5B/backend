@@ -8,7 +8,7 @@ This can be achive by creating a `.env` file with the following:
 
 ```env
 # Database
-DATABASE_URL="postgresql://postgres:prisma@postgres_db:5432/postgres?schema=public"
+DATABASE_URL="postgresql://postgres:prisma@localhost:5433/postgres?schema=public"
 
 # Application
 PORT=3000
