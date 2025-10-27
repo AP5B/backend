@@ -27,7 +27,7 @@ services:
       - .env
     networks:
       - prisma-network
-    environmet:
+    environment:
       DATABASE_URL: "postgresql://postgres:prisma@postgres_db:5432/postgres?schema=public"
 
   postgres_db:
