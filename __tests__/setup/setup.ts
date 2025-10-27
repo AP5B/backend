@@ -1,19 +1,17 @@
-import {
-  connectTestDb,
-  createAndSetupDb,
-  runMigrations,
-  tearDownDb,
-} from "../helpers/testDbSetup";
 import { TestServer } from "../helpers/testServer";
+import PrismaManager from "../../src/utils/prismaManager";
 
 export let testServer: TestServer;
 
 beforeAll(async () => {
-  await createAndSetupDb();
-  runMigrations();
-  await connectTestDb();
-}, 60000); // leave some time to build the containers
+  await PrismaManager.Disconnect();
+  await PrismaManager.Connect();
+
+  testServer = new TestServer();
+  await testServer.start();
+}, 30000);
 
 afterAll(async () => {
-  await tearDownDb();
+  if (testServer) await testServer.stop();
+  await PrismaManager.Disconnect();
 });

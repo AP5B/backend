@@ -24,8 +24,13 @@ export const loginUserService = async (logBody: loginRequestBody) => {
       );
     }
 
+    if (user.isDeleted === true) {
+      throw new HttpError(403, "Cuenta del usuario inhabilitada.");
+    }
+
     if (await bcrypt.compare(logBody.password, user.password)) {
-      return user;
+      const { password: _ignore, ...userWithoutPassword } = user;
+      return userWithoutPassword;
     } else {
       throw new HttpError(401, "Contraseña incorrecta");
     }
@@ -36,5 +41,4 @@ export const loginUserService = async (logBody: loginRequestBody) => {
     console.log(error);
     throw new HttpError(500, "Error interno del servidor");
   }
-  // insert to db
 };
