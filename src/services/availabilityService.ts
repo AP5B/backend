@@ -4,27 +4,98 @@ import { HttpError } from "../middlewares/errorHandler";
 const prisma = new PrismaClient();
 
 export interface Availability {
-  from: string,
-  to: string,
+  id: number
+  slot: number,
   day: number
 }
 
-export interface AvailabilityPayload {
+export interface AvailabilityCreatePayload {
   userId: number,
-  from: string,
-  to: string,
+  slot: number,
   day: number
 }
 
-export const saveAvailabilityService = async (availabilities: Array<AvailabilityPayload>) => {
+export interface AvailabilityUpdatePayload {
+  id: number,
+  userId: number,
+  slot: number,
+  day: number
+}
+
+export const saveAvailabilityService = async (availabilities: AvailabilityCreatePayload[]) => {
   try {
-    const avties = await prisma.availability.createMany({
-      data: availabilities
+    const avties = await prisma.availability.createManyAndReturn({
+      data: availabilities,
+      select: {
+        id: true,
+        day: true,
+        slot: true
+      },
     })
     return avties
   } catch (err: any) {
     console.log(err)
     throw new HttpError(500, "Error interno del sistema")
   }
+}
 
+export const getAvailailitiesService = async (teacherId: number) => {
+  try {
+    const avties = await prisma.availability.findMany({
+      where: {
+        userId: teacherId
+      },
+    })
+
+    return avties
+  } catch (err: any) {
+    console.log(err)
+    throw new HttpError(500, "Error interno de sistema.")
+  }
+}
+
+export const editAvailabilitiesService = async (availabilities: AvailabilityUpdatePayload[]) => {
+  try {
+    prisma.$transaction
+  } catch (err: any) {
+    console.log(err)
+    throw new HttpError(500, "Error interno de sistema.")
+  }
+}
+
+export const deleteAvailabilitiesService = async (userId: number, avIds: number[]) => {
+  try {
+    const av = await prisma.availability.findMany({
+      select: { id: true, userId: true },
+      where: {
+        id: {
+          in: avIds
+        },
+        userId: {
+          equals: userId
+        }
+      }
+    });
+
+    av.forEach(a => {
+      if (a.userId != userId)
+        throw new HttpError(403, `Usuario no es propietario de la disponibilidad con id ${a.id}.`)
+    })
+
+    const deleted = await prisma.availability.deleteMany({
+      where: {
+        id: {
+          in: avIds
+        },
+        userId: {
+          equals: userId
+        }
+      }
+    })
+
+    return deleted
+  } catch (err: any) {
+    console.log(err)
+    throw new HttpError(500, "Error interno del sistema.")
+  }
 }

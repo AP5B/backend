@@ -97,7 +97,8 @@ model Availability {
   id          Int       @id @default(autoincrement())
   userId      Int
   user        User      @relation(fields: [userId], references: [id])
-  from        String
-  to          String
+  slot        Int
   day         Int
+
+  @@unique([userId, slot, day])
 }
