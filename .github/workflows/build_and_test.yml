@@ -2,9 +2,10 @@ name: Backend Build & Test
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
   pull_request:
-    branches: [ develop ]
+    branches: [develop]
+  workflow_dispatch:
 
 jobs:
   build-test:
@@ -19,6 +20,14 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+
+      - name: Enable Docker for testcontainers
+        run: |
+          sudo systemctl start docker
+          docker info
+
+      - name: Give permissions to Docker socket
+        run: sudo chmod 666 /var/run/docker.sock
 
       - name: Install dependencies
         run: npm ci
