@@ -93,7 +93,7 @@ export const getAvailabilityController = async (req: Request, res: Response) => 
   const teacherId = parseInt(req.params.teacherId as string, 10);
 
   if (Number.isNaN(teacherId))
-    throw new HttpError(400, "teacherId debe ser un numero")
+    throw new HttpError(400, "teacherId debe ser un número")
 
   const av = await getAvailailitiesService(teacherId)
   res.status(200).send({
@@ -103,8 +103,8 @@ export const getAvailabilityController = async (req: Request, res: Response) => 
 }
 
 /**
-  * Con la estrucutra actual de days/slots no tiene sentido el editar la disponibilidad
-  * Este controlador no deberia ser usado a menos que se haga un refactor del funcionamiento completo del modelo
+  * Con la estructura actual de days/slots no tiene sentido el editar la disponibilidad
+  * Este controlador no debería ser usado a menos que se haga un refactor del funcionamiento completo del modelo
 */
 export const editAvailabilityController = (req: Request, res: Response) => {
   const avId = parseInt(req.params.teacherId as string, 10);
@@ -115,16 +115,16 @@ export const editAvailabilityController = (req: Request, res: Response) => {
   validateRequestBody(reqBody)
 }
 
-/*
-  * Este controldor permite eliminar un arreglo con id's de disponibilidad
-*/
+/**
+  * Este controlador permite eliminar un arreglo con id's de disponibilidad
+  */
 export const deleteAvailabilityController = async (req: Request, res: Response) => {
   const avIdsQuery = req.query.ids as string // "1,2,3"
 
   const avIds = avIdsQuery.split(',').map(x => parseInt(x, 10)) // [1,2,3]
 
   if (!avIds.every(id => Number.isInteger(id)))
-    throw new HttpError(400, "Las ids tienen que ser numeros enteros.")
+    throw new HttpError(400, "Las ids tienen que ser números enteros.")
 
   const deletedAv = await deleteAvailabilitiesService(res.locals.user.id, avIds)
 

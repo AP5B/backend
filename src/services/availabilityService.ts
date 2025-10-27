@@ -34,6 +34,9 @@ export const saveAvailabilityService = async (availabilities: AvailabilityCreate
     })
     return avties
   } catch (err: any) {
+    if (err.code === "P2002") { // Unique constraint failed on the fields: (`userId`,`slot`,`day`)
+      throw new HttpError(400, "Uno de los slots ya está asignado")
+    }
     console.log(err)
     throw new HttpError(500, "Error interno del sistema")
   }
@@ -49,8 +52,8 @@ export const getAvailailitiesService = async (teacherId: number) => {
 
     return avties
   } catch (err: any) {
-    console.log(err)
-    throw new HttpError(500, "Error interno de sistema.")
+    console.log(err.code)
+    throw new HttpError(500, "Error interno del sistema.")
   }
 }
 
@@ -59,7 +62,7 @@ export const editAvailabilitiesService = async (availabilities: AvailabilityUpda
     prisma.$transaction
   } catch (err: any) {
     console.log(err)
-    throw new HttpError(500, "Error interno de sistema.")
+    throw new HttpError(500, "Error interno del sistema.")
   }
 }
 
@@ -95,7 +98,7 @@ export const deleteAvailabilitiesService = async (userId: number, avIds: number[
 
     return deleted
   } catch (err: any) {
-    console.log(err)
+    console.log(err.code)
     throw new HttpError(500, "Error interno del sistema.")
   }
 }
