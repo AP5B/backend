@@ -1,13 +1,12 @@
-import { PrismaClient } from "@prisma/client";
 import { createApp } from "./app";
 import env from "./config/env";
+import PrismaManager from "./utils/prismaManager";
 
-const prisma = new PrismaClient();
 const PORT = env.port;
 
 async function main() {
   try {
-    await prisma.$connect();
+    await PrismaManager.Connect();
     const app = createApp();
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

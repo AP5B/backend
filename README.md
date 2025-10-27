@@ -69,3 +69,20 @@ This will build a Docker image from the source code, create a container with Pos
    ```bash
    npx prisma generate
    ```
+
+## Testing
+
+Run the test suite using Jest with Testcontainers for database testing, you need.
+**Ensure you have Docker Desktop running on your machine**
+
+```bash
+npm run test
+```
+
+### Running Specific Tests (Recommended)
+
+You can run specific test files or directories using Jest:
+
+```bash
+npm run test:only -- "./__tests__/integration/someTestFile.test.ts"
+```

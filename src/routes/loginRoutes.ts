@@ -58,14 +58,14 @@ const router = Router();
  *                        type: string
  *                        nullable: true
  *                        example: "Nombre"
- *                      last_name:
+ *                      last_name_1:
  *                        type: string
  *                        nullable: true
- *                        example: "Apellido"
- *                      password:
+ *                        example: "Apellido 1"
+ *                      last_name_2:
  *                        type: string
- *                        description: Contraseña hasheada
- *                        example: hash(password)
+ *                        nullable: true
+ *                        example: "Apellido 2"
  *                      role:
  *                        type: string
  *                        example: Student
