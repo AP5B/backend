@@ -9,7 +9,7 @@ import {
   saveAvailabilityService
 } from "../services/availabilityService"
 
-const MAX_UPLOAD_SIZE: number = 100;
+const MAX_UPLOAD_SIZE = 100;
 
 const sanitizeCreateAvailabilities = (
   userId: number,
@@ -107,12 +107,18 @@ export const getAvailabilityController = async (req: Request, res: Response) => 
   * Este controlador no debería ser usado a menos que se haga un refactor del funcionamiento completo del modelo
 */
 export const editAvailabilityController = (req: Request, res: Response) => {
-  const avId = parseInt(req.params.teacherId as string, 10);
+  const userId = parseInt(req.params.teacherId as string, 10);
   const reqBody = req.body as Availability[]
 
-  if (Number.isInteger(avId))
+  if (Number.isInteger(userId))
     throw new HttpError(400, "teacherId debe ser un entero.")
   validateRequestBody(reqBody)
+  const sanitizedBody = sanitizeUploadAvailabilities(userId, reqBody)
+
+  // llamar al servicio
+  console.log(sanitizedBody)
+
+  res.status(200).send()
 }
 
 /**

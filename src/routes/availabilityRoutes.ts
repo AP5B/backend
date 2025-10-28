@@ -2,7 +2,6 @@ import { Router } from "express";
 import { authenticate } from "../middlewares/authMiddleware";
 import {
   getAvailabilityController,
-  editAvailabilityController,
   createAvailabilitiesController,
   deleteAvailabilityController
 } from "../controllers/availabilityController"
