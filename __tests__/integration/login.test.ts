@@ -15,12 +15,12 @@ describe("Login endpoints", () => {
   beforeAll(async () => {
     try {
       prisma = PrismaManager.GetClient();
-      console.log(`db url en el before all ${process.env.DATABASE_URL}`);
       if (!prisma) {
         throw new Error("Prisma client failed to initialize.");
       }
     } catch (error) {
       console.error("Login test setup failed:", error);
+      prisma = null;
     }
   }, 30000);
 
