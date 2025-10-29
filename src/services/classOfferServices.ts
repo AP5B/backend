@@ -183,7 +183,7 @@ export const destroyClassOfferService = async (
         404,
         `No existe una oferta de clase con id ${classOfferId}.`,
       );
-    if (classOffer?.authorId != userId)
+    if (classOffer.authorId != userId)
       throw new HttpError(401, "El recurso no pertenece al usuario.");
 
     const deleteClassOffer = await prisma.classOffer.delete({
