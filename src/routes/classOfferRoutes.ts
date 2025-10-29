@@ -4,8 +4,8 @@ import {
   getClassOfferByIdController,
   createClassOfferController,
   editClassOfferController,
-  deleteClassOfferController
-} from "../controllers/classOfferController"
+  deleteClassOfferController,
+} from "../controllers/classOfferController";
 import { authenticate, autorize } from "../middlewares/authMiddleware";
 
 const router = Router();
@@ -79,11 +79,16 @@ const router = Router();
  *                     type: string
  *                     example: Usuario no tiene rol Teacher.
  */
-router.get("/protected", authenticate, autorize("Teacher"), (req: Request,res: Response) => {
-  res.status(200).json({
-    message: "Esta es una ruta protegida, acceso exitoso",
-  });
-})
+router.get(
+  "/protected",
+  authenticate,
+  autorize("Teacher"),
+  (req: Request, res: Response) => {
+    res.status(200).json({
+      message: "Esta es una ruta protegida, acceso exitoso",
+    });
+  },
+);
 
 /**
  * @swagger
@@ -168,10 +173,10 @@ router.get("/protected", authenticate, autorize("Teacher"), (req: Request,res: R
  *                         type: number
  *                         example: 4
  */
-router.get("/", getClassOffersController)
+router.get("/", getClassOffersController);
 
 /**
- * 
+ *
  * @swagger
  * /class-offer/{classId}:
  *   get:
@@ -377,7 +382,12 @@ router.post("/", authenticate, autorize("Teacher"), createClassOfferController);
  *                   type: string
  *                   example: Error interno del servidor
  */
-router.patch("/:classId", authenticate, autorize("Teacher"), editClassOfferController);
+router.patch(
+  "/:classId",
+  authenticate,
+  autorize("Teacher"),
+  editClassOfferController,
+);
 
 /**
  * @swagger
@@ -408,7 +418,7 @@ router.patch("/:classId", authenticate, autorize("Teacher"), editClassOfferContr
  *                   $ref: "#/components/schemas/classOffer"
  *                 message:
  *                   type: string
- *                   example: Usuario eliminado con éxito.
+ *                   example: Oferta de clase eliminada con éxito.
  *       400:
  *         description: Error en los datos de entrada
  *         content:
@@ -450,6 +460,11 @@ router.patch("/:classId", authenticate, autorize("Teacher"), editClassOfferContr
  *                   type: string
  *                   example: Error interno del servidor.
  */
-router.delete("/:classId", authenticate, autorize("Teacher"), deleteClassOfferController);
+router.delete(
+  "/:classId",
+  authenticate,
+  autorize("Teacher"),
+  deleteClassOfferController,
+);
 
-export default router
+export default router;

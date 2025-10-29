@@ -2,7 +2,7 @@ import { createApp } from "./app";
 import env from "./config/env";
 import PrismaManager from "./utils/prismaManager";
 
-const PORT = env.port;
+const PORT = env.port || 3000;
 
 async function main() {
   try {
