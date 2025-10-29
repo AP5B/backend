@@ -7,6 +7,9 @@ on:
     branches: [develop]
   workflow_dispatch:
 
+env:
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
 jobs:
   build-test:
     name: Build and Run Tests
