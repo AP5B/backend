@@ -65,6 +65,32 @@ describe("Class Offer endpoints", () => {
       },
     });
 
+    await prisma.classOffer.createMany({
+      data: [
+        {
+          title: "Cálculo I",
+          description: "Clases básicas de derivadas",
+          price: 10000,
+          category: "Calculo",
+          authorId: testTeacherUser.id,
+        },
+        {
+          title: "Economía avanzada",
+          description: "Micro y macroeconomía",
+          price: 20000,
+          category: "Economia",
+          authorId: testTeacherUser.id,
+        },
+        {
+          title: "Química general",
+          description: "Estructura atómica",
+          price: 15000,
+          category: "Quimica",
+          authorId: testTeacherUser.id,
+        },
+      ],
+    });
+
     teacherToken = generateTestToken(
       testTeacherUser.id,
       testTeacherUser.email,
@@ -169,6 +195,48 @@ describe("Class Offer endpoints", () => {
         "message",
         "El precio no puede estar vacío",
       );
+    });
+  });
+
+  describe("GET /class-offer", () => {
+    it("Should return paginated class offers", async () => {
+      const response = await studentAgent.get("/class-offer?page=1&limit=2");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(2);
+    });
+
+    it("Should filter by category", async () => {
+      const CATEGORY = "Economia";
+      const response = await studentAgent.get(
+        `/class-offer?category=${CATEGORY}`,
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].category).toBe(CATEGORY);
+    });
+
+    it("Should filter by price range", async () => {
+      const MIN_PRICE = 12000;
+      const MAX_PRICE = 18000;
+
+      const response = await studentAgent.get(
+        `/class-offer?minPrice=${MIN_PRICE}&maxPrice=${MAX_PRICE}`,
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].price).toBeGreaterThan(MIN_PRICE);
+      expect(response.body.data[0].price).toBeLessThan(MAX_PRICE);
+    });
+
+    it("Should search by title substring (case-insensitive)", async () => {
+      const TITLE = "cálculo";
+      const response = await studentAgent.get(`/class-offer?title=${TITLE}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data[0].title).toContain(TITLE);
     });
   });
 });

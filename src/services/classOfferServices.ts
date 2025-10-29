@@ -59,7 +59,7 @@ export const getClassOffersService = async (
     } else if (query.minPrice || query.maxPrice) {
       filterPrice = {
         ...(query.minPrice ? { gte: query.minPrice } : {}),
-        ...(query.minPrice ? { lte: query.maxPrice } : {}),
+        ...(query.maxPrice ? { lte: query.maxPrice } : {}),
       };
     }
 
