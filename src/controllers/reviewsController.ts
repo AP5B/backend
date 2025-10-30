@@ -7,6 +7,7 @@ import {
   deleteReviewService,
   reviewRequestBody,
   editedReviewRequestBody,
+  getCurrentUserReviewsService,
 } from "../services/reviewsServices";
 
 export const createReviewController = async (req: Request, res: Response) => {
@@ -99,5 +100,19 @@ export const deleteReviewController = async (req: Request, res: Response) => {
 
   res.status(200).json({
     message: "Review eliminada con éxito.",
+  });
+};
+
+export const getCurrentUserReviewsController = async (
+  req: Request,
+  res: Response,
+) => {
+  const userId = parseInt(res.locals.user.id as string);
+
+  const myReviews = await getCurrentUserReviewsService(userId);
+
+  res.status(200).json({
+    message: "Reviews del usuario obtenidas con éxito.",
+    reviews: myReviews,
   });
 };

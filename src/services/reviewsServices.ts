@@ -27,7 +27,18 @@ export const createReviewService = async (
       throw new HttpError(404, `Tutor no encontrado.`);
     }
 
-    const review = await prisma.review.create({
+    const review = await prisma.review.findFirst({
+      where: {
+        teacherId: teacherId,
+        reviewerId: reviewerId,
+      },
+    });
+
+    if (review) {
+      throw new HttpError(400, `Ya dejaste una review a este tutor`);
+    }
+
+    const newReview = await prisma.review.create({
       data: {
         ...reviewBody,
         teacherId: teacherId,
@@ -35,7 +46,7 @@ export const createReviewService = async (
       },
     });
 
-    return review;
+    return newReview;
   } catch (error) {
     if (error instanceof HttpError) {
       throw error;
@@ -129,6 +140,19 @@ export const deleteReviewService = async (reviewId: number, userId: number) => {
     if (error instanceof HttpError) {
       throw error;
     }
+    console.log(error);
+    throw new HttpError(500, "Error interno del servidor");
+  }
+};
+
+export const getCurrentUserReviewsService = async (userId: number) => {
+  try {
+    const myReviews = await prisma.review.findMany({
+      where: { reviewerId: userId },
+    });
+
+    return myReviews;
+  } catch (error) {
     console.log(error);
     throw new HttpError(500, "Error interno del servidor");
   }
