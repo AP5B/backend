@@ -20,7 +20,7 @@ export const createReviewService = async (
 ) => {
   try {
     const teacher = await prisma.user.findUnique({
-      where: { id: teacherId },
+      where: { id: teacherId, role: "Teacher" },
     });
 
     if (!teacher) {
@@ -64,7 +64,7 @@ export const getTeacherReviewsService = async (
   try {
     const offset = (page - 1) * limit;
     const teacher = await prisma.user.findUnique({
-      where: { id: teacherId },
+      where: { id: teacherId, role: "Teacher" },
     });
 
     if (!teacher) {
@@ -145,10 +145,17 @@ export const deleteReviewService = async (reviewId: number, userId: number) => {
   }
 };
 
-export const getCurrentUserReviewsService = async (userId: number) => {
+export const getCurrentUserReviewsService = async (
+  userId: number,
+  page: number,
+  limit: number,
+) => {
   try {
+    const offset = (page - 1) * limit;
     const myReviews = await prisma.review.findMany({
       where: { reviewerId: userId },
+      skip: offset,
+      take: limit,
     });
 
     return myReviews;

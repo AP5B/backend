@@ -16,7 +16,10 @@ export const createReviewController = async (req: Request, res: Response) => {
   const userId = parseInt(res.locals.user.id as string);
 
   if (!teacherId) {
-    throw new HttpError(400, "Id del tutor faltante.");
+    throw new HttpError(
+      400,
+      "Id del tutor no fue proporcionado correctamente.",
+    );
   }
 
   if (!reqBody.rating) {
@@ -25,6 +28,10 @@ export const createReviewController = async (req: Request, res: Response) => {
 
   if (isNaN(reqBody.rating)) {
     throw new HttpError(400, "La puntuación debe ser un número");
+  }
+
+  if (reqBody.rating > 5 || reqBody.rating < 1) {
+    throw new HttpError(400, "La puntuación debe estar entre 1 y 5");
   }
 
   const newReview = await createReviewService(reqBody, teacherId, userId);
@@ -46,7 +53,10 @@ export const getTeacherReviewsController = async (
   const teacherId = parseInt(req.params.teacherId as string);
 
   if (!teacherId) {
-    throw new HttpError(400, "Id del tutor faltante.");
+    throw new HttpError(
+      400,
+      "Id del tutor no fue proporcionado correctamente.",
+    );
   }
 
   const reviews = await getTeacherReviewsService(
@@ -66,7 +76,10 @@ export const updateReviewController = async (req: Request, res: Response) => {
   const userId = parseInt(res.locals.user.id as string);
 
   if (!reviewId) {
-    throw new HttpError(400, "Id de la review faltante.");
+    throw new HttpError(
+      400,
+      "Id de la review no fue proporcionada correctamente.",
+    );
   }
 
   if (!editBody.content && !editBody.rating) {
@@ -78,6 +91,10 @@ export const updateReviewController = async (req: Request, res: Response) => {
 
   if (editBody.rating && isNaN(editBody.rating)) {
     throw new HttpError(400, "La puntuación debe ser un número");
+  }
+
+  if (editBody.rating && (editBody.rating > 5 || editBody.rating < 1)) {
+    throw new HttpError(400, "La puntuación debe estar entre 1 y 5");
   }
 
   const editedReview = await updateReviewService(reviewId, userId, editBody);
@@ -93,7 +110,10 @@ export const deleteReviewController = async (req: Request, res: Response) => {
   const userId = parseInt(res.locals.user.id as string);
 
   if (!reviewId) {
-    throw new HttpError(400, "Id de la review faltante.");
+    throw new HttpError(
+      400,
+      "Id de la review no fue proporcionada correctamente.",
+    );
   }
 
   await deleteReviewService(reviewId, userId);
@@ -108,8 +128,16 @@ export const getCurrentUserReviewsController = async (
   res: Response,
 ) => {
   const userId = parseInt(res.locals.user.id as string);
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const normPage = page > 0 ? page : 1;
+  const normLimit = limit > 0 ? limit : 10;
 
-  const myReviews = await getCurrentUserReviewsService(userId);
+  const myReviews = await getCurrentUserReviewsService(
+    userId,
+    normPage,
+    normLimit,
+  );
 
   res.status(200).json({
     message: "Reviews del usuario obtenidas con éxito.",
