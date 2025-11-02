@@ -5,6 +5,7 @@ import {
   createClassOfferController,
   editClassOfferController,
   deleteClassOfferController,
+  getMyClassOffersController,
 } from "../controllers/classOfferController";
 import { authenticate, autorize } from "../middlewares/authMiddleware";
 
@@ -174,6 +175,78 @@ router.get(
  *                         example: 4
  */
 router.get("/", getClassOffersController);
+
+/**
+ * @swagger
+ * /class-offer/me:
+ *   get:
+ *     summary: Obtener todas las ofertas de clase del profesor autenticado
+ *     description: Retorna todas las ofertas de clase creadas por el usuario autenticado.
+ *     tags:
+ *       - Class Offer
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *           minimum: 1
+ *         description: Número de página, empezando por 1
+ *         required: false
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Cantidad de elementos por página
+ *         required: false
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de ofertas del profesor autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 authorId:
+ *                   type: integer
+ *                   example: 5
+ *                 total:
+ *                   type: integer
+ *                   example: 2
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: "#/components/schemas/classOffer"
+ *       401:
+ *         description: El usuario no está autenticado o no tiene el rol requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no tiene rol Teacher
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error interno del servidor
+ */
+router.get(
+  "/me",
+  authenticate,
+  autorize("Teacher"),
+  getMyClassOffersController,
+);
 
 /**
  *

@@ -199,3 +199,33 @@ export const destroyClassOfferService = async (
     throw new HttpError(500, "Error interno del servidor");
   }
 };
+
+/**
+ * Devuelve todas las ofertas de clase publicadas por un profesor
+ * @param authorId ID del profesor
+ * @returns Lista de ofertas del profesor
+ */
+export const getMyClassOffersService = async (
+  authorId: number,
+  page: number,
+  limit: number,
+) => {
+  try {
+    const offset = (page - 1) * limit;
+    const classOffers = await prisma.classOffer.findMany({
+      where: {
+        authorId: authorId,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      skip: offset,
+      take: limit,
+    });
+
+    return classOffers;
+  } catch (error) {
+    console.log(error);
+    throw new HttpError(500, "Error interno del servidor.");
+  }
+};
