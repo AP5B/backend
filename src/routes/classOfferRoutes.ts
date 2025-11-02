@@ -5,8 +5,8 @@ import {
   createClassOfferController,
   editClassOfferController,
   deleteClassOfferController,
-  getMyClassOffersController
-} from "../controllers/classOfferController"
+  getMyClassOffersController,
+} from "../controllers/classOfferController";
 import { authenticate, autorize } from "../middlewares/authMiddleware";
 
 const router = Router();
@@ -184,6 +184,22 @@ router.get("/", getClassOffersController);
  *     description: Retorna todas las ofertas de clase creadas por el usuario autenticado.
  *     tags:
  *       - Class Offer
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *           minimum: 1
+ *         description: Número de página, empezando por 1
+ *         required: false
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Cantidad de elementos por página
+ *         required: false
  *     security:
  *       - cookieAuth: []
  *     responses:
@@ -225,10 +241,15 @@ router.get("/", getClassOffersController);
  *                   type: string
  *                   example: Error interno del servidor
  */
-router.get("/me", authenticate, autorize("Teacher"), getMyClassOffersController);
+router.get(
+  "/me",
+  authenticate,
+  autorize("Teacher"),
+  getMyClassOffersController,
+);
 
 /**
- * 
+ *
  * @swagger
  * /class-offer/{classId}:
  *   get:

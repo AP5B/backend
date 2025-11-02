@@ -205,8 +205,13 @@ export const destroyClassOfferService = async (
  * @param authorId ID del profesor
  * @returns Lista de ofertas del profesor
  */
-export const getMyClassOffersService = async (authorId: number) => {
+export const getMyClassOffersService = async (
+  authorId: number,
+  page: number,
+  limit: number,
+) => {
   try {
+    const offset = (page - 1) * limit;
     const classOffers = await prisma.classOffer.findMany({
       where: {
         authorId: authorId,
@@ -214,6 +219,8 @@ export const getMyClassOffersService = async (authorId: number) => {
       orderBy: {
         id: "desc",
       },
+      skip: offset,
+      take: limit,
     });
 
     return classOffers;
@@ -222,4 +229,3 @@ export const getMyClassOffersService = async (authorId: number) => {
     throw new HttpError(500, "Error interno del servidor.");
   }
 };
-

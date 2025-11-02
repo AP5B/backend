@@ -178,11 +178,21 @@ export const deleteClassOfferController = async (
   });
 };
 
-
-export const getMyClassOffersController = async (req: Request, res: Response) => {
+export const getMyClassOffersController = async (
+  req: Request,
+  res: Response,
+) => {
   const userId = res.locals.user.id;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const normPage = page > 0 ? page : 1;
+  const normLimit = limit > 0 ? limit : 10;
 
-  const classOffers = await getMyClassOffersService(userId);
+  const classOffers = await getMyClassOffersService(
+    userId,
+    normPage,
+    normLimit,
+  );
 
   res.status(200).json({
     authorId: userId,
@@ -190,4 +200,3 @@ export const getMyClassOffersController = async (req: Request, res: Response) =>
     data: classOffers,
   });
 };
-
