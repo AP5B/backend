@@ -1,31 +1,30 @@
-import { Request, Response } from "express"
-import { HttpError } from "../middlewares/errorHandler"
+import { Request, Response } from "express";
+import { HttpError } from "../middlewares/errorHandler";
 import {
   Availability,
   AvailabilityCreatePayload,
   AvailabilityUpdatePayload,
   deleteAvailabilitiesService,
   getAvailailitiesService,
-  saveAvailabilityService
-} from "../services/availabilityService"
-import { throwDeprecation } from "node:process";
+  saveAvailabilityService,
+} from "../services/availabilityService";
 
 const MAX_UPLOAD_SIZE = 100;
 
 const sanitizeCreateAvailabilities = (
   userId: number,
-  av: Omit<Availability, "id">[]
+  av: Omit<Availability, "id">[],
 ): AvailabilityCreatePayload[] => {
   const sanitized = av.map((a) => {
     return {
       userId,
       day: a.day,
-      slot: a.slot
-    }
-  })
+      slot: a.slot,
+    };
+  });
 
   return sanitized;
-}
+};
 
 const sanitizeUploadAvailabilities = (
   userId: number,
@@ -36,130 +35,155 @@ const sanitizeUploadAvailabilities = (
       id: a.id,
       userId,
       slot: a.slot,
-      day: a.day
+      day: a.day,
     };
-  })
-  return sanitized
-}
+  });
+  return sanitized;
+};
 
 const validateAvailability = (av: Omit<Availability, "id">) => {
-  if (!av?.slot)
-    throw new HttpError(400, "slot es requerido.")
+  if (!av?.slot) throw new HttpError(400, "slot es requerido.");
   if (!Number.isInteger(av.slot))
-    throw new HttpError(400, `slot debe ser un numbero.`)
+    throw new HttpError(400, `slot debe ser un numbero.`);
   if (av.slot < 0 || av.slot > 24)
-    throw new HttpError(400, `slot fuera de rango (0 - 24).`)
-  if (!av?.day)
-    throw new HttpError(400, "day es requerido.")
+    throw new HttpError(400, `slot fuera de rango (0 - 24).`);
+  if (!av?.day) throw new HttpError(400, "day es requerido.");
   if (!Number.isInteger(av.day))
-    throw new HttpError(400, "day debe ser un entero.")
+    throw new HttpError(400, "day debe ser un entero.");
   if (av.day > 7 || av.day < 1)
-    throw new HttpError(400, "day fuera de rango (1 - 7).")
-}
+    throw new HttpError(400, "day fuera de rango (1 - 7).");
+};
 
 /**
-  * Valida y sanitiza el request body
-*/
+ * Valida y sanitiza el request body
+ */
 const validateRequestBody = (body: Omit<Availability, "id">[]) => {
   // es un arreglo
   if (Array.isArray(body)) {
     if (body.length > MAX_UPLOAD_SIZE)
-      throw new HttpError(400, `La cantidad de disponibilidades a crear excede el máximo (${MAX_UPLOAD_SIZE}).`)
+      throw new HttpError(
+        400,
+        `La cantidad de disponibilidades a crear excede el máximo (${MAX_UPLOAD_SIZE}).`,
+      );
 
     body.forEach((av: Omit<Availability, "id">) => {
-      validateAvailability(av)
-    })
+      validateAvailability(av);
+    });
+  } else {
+    throw new HttpError(400, "La request debe ser un arreglo.");
   }
-  else {
-    throw new HttpError(400, "La request debe ser un arreglo.")
-  }
-}
+};
 
 // --- Controladores de solicitud ---
-export const createAvailabilitiesController = async (req: Request, res: Response) => {
+export const createAvailabilitiesController = async (
+  req: Request,
+  res: Response,
+) => {
   const reqBody = req.body as Omit<Availability, "id">[]; //id no relevante para crear
 
   validateRequestBody(reqBody);
-  const sanBody: AvailabilityCreatePayload[] = sanitizeCreateAvailabilities(res.locals.user.id, reqBody)
+  const sanBody: AvailabilityCreatePayload[] = sanitizeCreateAvailabilities(
+    res.locals.user.id,
+    reqBody,
+  );
 
   const av = await saveAvailabilityService(sanBody);
 
   res.status(201).send({
     data: av,
-    count: av.length
-  })
-}
+    count: av.length,
+  });
+};
 
-export const getAvailabilityController = async (req: Request, res: Response) => {
+export const getAvailabilityController = async (
+  req: Request,
+  res: Response,
+) => {
   const teacherId = parseInt(req.params.teacherId as string, 10);
 
   if (Number.isNaN(teacherId))
-    throw new HttpError(400, "teacherId debe ser un número")
+    throw new HttpError(400, "teacherId debe ser un número");
 
-  const av = await getAvailailitiesService(teacherId)
+  const av = await getAvailailitiesService(teacherId);
   res.status(200).send({
     data: av,
-    count: av.length
-  })
-}
+    count: av.length,
+  });
+};
 
 /**
-  * Con la estructura actual de days/slots no tiene sentido el editar la disponibilidad
-  * Este controlador no debería ser usado a menos que se haga un refactor del funcionamiento completo del modelo
-*/
+ * Con la estructura actual de days/slots no tiene sentido el editar la disponibilidad
+ * Este controlador no debería ser usado a menos que se haga un refactor del funcionamiento completo del modelo
+ */
 export const editAvailabilityController = (req: Request, res: Response) => {
   const userId = parseInt(req.params.teacherId as string, 10);
-  const reqBody = req.body as Availability[]
+  const reqBody = req.body as Availability[];
 
   if (Number.isInteger(userId))
-    throw new HttpError(400, "teacherId debe ser un entero.")
-  validateRequestBody(reqBody)
-  const sanitizedBody = sanitizeUploadAvailabilities(userId, reqBody)
+    throw new HttpError(400, "teacherId debe ser un entero.");
+  validateRequestBody(reqBody);
+  const sanitizedBody = sanitizeUploadAvailabilities(userId, reqBody);
 
   // llamar al servicio
-  console.log(sanitizedBody)
+  console.log(sanitizedBody);
 
-  res.status(200).send()
-}
+  res.status(200).send();
+};
 
 /**
-  * Este controlador permite eliminar un arreglo con id's de disponibilidad
-  */
-export const deleteAvailabilityController = async (req: Request, res: Response) => {
-  const avTupQuery = req.query.av as string[] // ['1,2', '2,3']
+ * Este controlador permite eliminar un arreglo con id's de disponibilidad
+ */
+export const deleteAvailabilityController = async (
+  req: Request,
+  res: Response,
+) => {
+  const avTupQuery = req.query.av as string[]; // ['1,2', '2,3']
 
   if (Array.isArray(avTupQuery) === false) {
-    throw new HttpError(400, "Se espera un arreglo de disponibilidades en el formato day,slot.")
+    throw new HttpError(
+      400,
+      "Se espera un arreglo de disponibilidades en el formato day,slot.",
+    );
   }
 
   if (!avTupQuery || avTupQuery.length === 0) {
-    throw new HttpError(400, "Se requiere al menos una par de disponibilidad para eliminar.")
+    throw new HttpError(
+      400,
+      "Se requiere al menos una par de disponibilidad para eliminar.",
+    );
   }
 
-  const avTup: [number, number][] = avTupQuery.map((x): [number, number] => { // parsing data
+  const avTup: [number, number][] = avTupQuery.map((x): [number, number] => {
+    // parsing data
     if (!x || x.length === 0) {
       throw new HttpError(400, `Par con formato inválido.`);
     }
 
-    const split = x.split(',') as [string, string];
+    const split = x.split(",") as [string, string];
     if (split.length != 2) {
-      throw new HttpError(400, "Formato de par inválido. Deben ser day,slot")
+      throw new HttpError(400, "Formato de par inválido. Deben ser day,slot");
     }
     const [dayStr, slotStr] = split;
     const day = parseInt(dayStr);
     const slot = parseInt(slotStr);
 
     if (Number.isNaN(day) || Number.isNaN(slot)) {
-      throw new HttpError(400, `day y slot deben ser números enteros. (${split[0]},${split[1]})`);
+      throw new HttpError(
+        400,
+        `day y slot deben ser números enteros. (${split[0]},${split[1]})`,
+      );
     }
 
     return [day, slot];
   }); // [[1,2], [2,3]]
 
-  const deletedAv = await deleteAvailabilitiesService(res.locals.user.id, avTup)
+  const deletedAv = await deleteAvailabilitiesService(
+    res.locals.user.id,
+    avTup,
+  );
 
   res.status(200).send({
     count: deletedAv.count,
-    message: "Disponibilidades eliminadas con éxito."
-  })
-}
+    message: "Disponibilidades eliminadas con éxito.",
+  });
+};

@@ -87,7 +87,10 @@ export const deleteAvailabilitiesService = async (
       },
     });
     if (av.length === 0) {
-      throw new HttpError(404, "No se encontraron disponibilidades para eliminar.");
+      throw new HttpError(
+        404,
+        "No se encontraron disponibilidades para eliminar.",
+      );
     }
 
     av.forEach((a) => {

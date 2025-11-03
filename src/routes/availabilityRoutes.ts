@@ -3,11 +3,8 @@ import { authenticate, autorize } from "../middlewares/authMiddleware";
 import {
   getAvailabilityController,
   createAvailabilitiesController,
-  deleteAvailabilityController
-} from "../controllers/availabilityController"
-
-
-
+  deleteAvailabilityController,
+} from "../controllers/availabilityController";
 
 const router = Router();
 /**
@@ -167,7 +164,12 @@ router.get("/:teacherId", getAvailabilityController);
  *               schema:
  *                 $ref: "#/components/schemas/systemError"
  */
-router.post("/", authenticate, autorize("Teacher"), createAvailabilitiesController);
+router.post(
+  "/",
+  authenticate,
+  autorize("Teacher"),
+  createAvailabilitiesController,
+);
 
 /**
  * @swagger
@@ -223,4 +225,4 @@ router.post("/", authenticate, autorize("Teacher"), createAvailabilitiesControll
  */
 router.delete("/", authenticate, deleteAvailabilityController);
 
-export default router
+export default router;
