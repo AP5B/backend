@@ -66,20 +66,29 @@ export const getAvailailitiesService = async (teacherId: number) => {
 
 export const deleteAvailabilitiesService = async (
   userId: number,
-  avIds: number[],
+  avTuples: [number, number][],
 ) => {
+  const days = avTuples.map((t) => t[0]);
+  const slots = avTuples.map((t) => t[1]);
+
   try {
     const av = await prisma.availability.findMany({
       select: { id: true, userId: true },
       where: {
-        id: {
-          in: avIds,
+        day: {
+          in: days,
+        },
+        slot: {
+          in: slots,
         },
         userId: {
           equals: userId,
         },
       },
     });
+    if (av.length === 0) {
+      throw new HttpError(404, "No se encontraron disponibilidades para eliminar.");
+    }
 
     av.forEach((a) => {
       if (a.userId != userId)
@@ -91,8 +100,11 @@ export const deleteAvailabilitiesService = async (
 
     const deleted = await prisma.availability.deleteMany({
       where: {
-        id: {
-          in: avIds,
+        day: {
+          in: days,
+        },
+        slot: {
+          in: slots,
         },
         userId: {
           equals: userId,
@@ -102,6 +114,9 @@ export const deleteAvailabilitiesService = async (
 
     return deleted;
   } catch (err) {
+    if (err instanceof HttpError) {
+      throw err;
+    }
     console.log(err);
     throw new HttpError(500, "Error interno del sistema.");
   }

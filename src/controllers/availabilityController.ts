@@ -8,6 +8,7 @@ import {
   getAvailailitiesService,
   saveAvailabilityService
 } from "../services/availabilityService"
+import { throwDeprecation } from "node:process";
 
 const MAX_UPLOAD_SIZE = 100;
 
@@ -125,14 +126,37 @@ export const editAvailabilityController = (req: Request, res: Response) => {
   * Este controlador permite eliminar un arreglo con id's de disponibilidad
   */
 export const deleteAvailabilityController = async (req: Request, res: Response) => {
-  const avIdsQuery = req.query.ids as string // "1,2,3"
+  const avTupQuery = req.query.av as string[] // ['1,2', '2,3']
 
-  const avIds = avIdsQuery.split(',').map(x => parseInt(x, 10)) // [1,2,3]
+  if (Array.isArray(avTupQuery) === false) {
+    throw new HttpError(400, "Se espera un arreglo de disponibilidades en el formato day,slot.")
+  }
 
-  if (!avIds.every(id => Number.isInteger(id)))
-    throw new HttpError(400, "Las ids tienen que ser números enteros.")
+  if (!avTupQuery || avTupQuery.length === 0) {
+    throw new HttpError(400, "Se requiere al menos una par de disponibilidad para eliminar.")
+  }
 
-  const deletedAv = await deleteAvailabilitiesService(res.locals.user.id, avIds)
+  const avTup: [number, number][] = avTupQuery.map((x): [number, number] => { // parsing data
+    if (!x || x.length === 0) {
+      throw new HttpError(400, `Par con formato inválido.`);
+    }
+
+    const split = x.split(',') as [string, string];
+    if (split.length != 2) {
+      throw new HttpError(400, "Formato de par inválido. Deben ser day,slot")
+    }
+    const [dayStr, slotStr] = split;
+    const day = parseInt(dayStr);
+    const slot = parseInt(slotStr);
+
+    if (Number.isNaN(day) || Number.isNaN(slot)) {
+      throw new HttpError(400, `day y slot deben ser números enteros. (${split[0]},${split[1]})`);
+    }
+
+    return [day, slot];
+  }); // [[1,2], [2,3]]
+
+  const deletedAv = await deleteAvailabilitiesService(res.locals.user.id, avTup)
 
   res.status(200).send({
     count: deletedAv.count,

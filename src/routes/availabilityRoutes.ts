@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "../middlewares/authMiddleware";
+import { authenticate, autorize } from "../middlewares/authMiddleware";
 import {
   getAvailabilityController,
   createAvailabilitiesController,
@@ -167,7 +167,7 @@ router.get("/:teacherId", getAvailabilityController);
  *               schema:
  *                 $ref: "#/components/schemas/systemError"
  */
-router.post("/", authenticate, createAvailabilitiesController);
+router.post("/", authenticate, autorize("Teacher"), createAvailabilitiesController);
 
 /**
  * @swagger
