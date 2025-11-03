@@ -10,6 +10,7 @@ import loginRoutes from "./routes/loginRoutes";
 import classRoutes from "./routes/classOfferRoutes";
 import cookieParser from "cookie-parser";
 import env from "./config/env";
+import reviewsRoutes from "./routes/reviewsRoutes";
 
 // Swagger setup
 const options = {
@@ -56,6 +57,7 @@ export const createApp = () => {
   app.use("/", loginRoutes);
   app.use("/class-offer/", classRoutes);
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // Swagger
+  app.use("/reviews/", reviewsRoutes);
 
   app.use(errorHandler);
   return app;
