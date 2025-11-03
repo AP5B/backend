@@ -34,7 +34,10 @@ export const createReviewController = async (req: Request, res: Response) => {
     throw new HttpError(400, "La puntuación debe estar entre 1 y 5");
   }
 
-  const newReview = await createReviewService(reqBody, teacherId, userId);
+  const sanitizedBody: reviewRequestBody = { rating: reqBody.rating };
+  if (reqBody.content) sanitizedBody.content = reqBody.content;
+
+  const newReview = await createReviewService(sanitizedBody, teacherId, userId);
 
   res.status(200).json({
     message: "Review creada con éxito",
@@ -71,9 +74,10 @@ export const getTeacherReviewsController = async (
 };
 
 export const updateReviewController = async (req: Request, res: Response) => {
-  const editBody = req.body as editedReviewRequestBody;
+  const { rating, content } = req.body as editedReviewRequestBody;
   const reviewId = parseInt(req.params.reviewId as string);
   const userId = parseInt(res.locals.user.id as string);
+  const sanitizedBody: editedReviewRequestBody = {};
 
   if (!reviewId) {
     throw new HttpError(
@@ -82,22 +86,29 @@ export const updateReviewController = async (req: Request, res: Response) => {
     );
   }
 
-  if (!editBody.content && !editBody.rating) {
+  if (!content && !rating) {
     throw new HttpError(
       400,
       "No se proporcionaron datos para actualizar la review.",
     );
   }
 
-  if (editBody.rating && isNaN(editBody.rating)) {
+  if (rating && isNaN(rating)) {
     throw new HttpError(400, "La puntuación debe ser un número");
   }
 
-  if (editBody.rating && (editBody.rating > 5 || editBody.rating < 1)) {
+  if (rating && (rating > 5 || rating < 1)) {
     throw new HttpError(400, "La puntuación debe estar entre 1 y 5");
   }
 
-  const editedReview = await updateReviewService(reviewId, userId, editBody);
+  if (rating) sanitizedBody.rating = rating;
+  if (content) sanitizedBody.content = content;
+
+  const editedReview = await updateReviewService(
+    reviewId,
+    userId,
+    sanitizedBody,
+  );
 
   res.status(200).json({
     message: "Review editada con éxito.",

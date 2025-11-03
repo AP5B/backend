@@ -73,8 +73,24 @@ router.get("/user", authenticate, getCurrentUserReviewsController);
  *                         example: 2025-10-31T21:27:40.000Z
  *       401:
  *         description: No autorizado. El token JWT es inválido o no fue proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Autenticación fallida
  *       500:
  *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error interno del servidor
  */
 
 router.post("/:teacherId", authenticate, createReviewController);
