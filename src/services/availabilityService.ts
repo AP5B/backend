@@ -62,7 +62,8 @@ export const getAvailailitiesService = async (teacherId: number) => {
       orderBy: [{ day: "asc" }, { slot: "asc" }],
     });
 
-    const grouped = Object.create({
+    type DayKey = "1" | "2" | "3" | "4" | "5" | "6" | "7";
+    const grouped: Record<DayKey, number[]> = {
       "1": [],
       "2": [],
       "3": [],
@@ -70,13 +71,12 @@ export const getAvailailitiesService = async (teacherId: number) => {
       "5": [],
       "6": [],
       "7": [],
-    });
+    };
 
     avties.forEach((av) => {
       // Node 20+
-      grouped[av.day].push(av.slot);
+      grouped[String(av.day) as DayKey].push(av.slot);
     });
-
     return grouped;
   } catch (err) {
     console.log(err);

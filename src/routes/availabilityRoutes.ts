@@ -210,25 +210,30 @@ router.post(
  * /availability:
  *   delete:
  *     summary: Elimina disponibilidad
- *     description: Elimina uno o varios slots de disponibilidad
+ *     description: Elimina uno o varios pares de disponibilidad (`day,slot`) pasados como query params.
  *     tags:
  *       - Availability
  *     security:
  *       - cookieAuth: []
  *     parameters:
  *       - in: query
- *         name: ids
- *         explode: false
- *         style: form
+ *         name: av
  *         required: true
- *         description: arreglo con ids a eliminar
+ *         description: |
+ *           Uno o más pares de disponibilidad en el formato `day,slot`.
+ *           Cada par representa el día y el bloque horario a eliminar.
+ *           <br>
+ *           Ejemplo: `?av=1,2&av=2,3`
  *         schema:
  *           type: array
  *           items:
- *             type: integer
+ *             type: string
+ *             example: "1,2"
+ *         style: form
+ *         explode: true
  *     responses:
  *       200:
- *         description: Disponibilidades eliminadas con éxito
+ *         description: Disponibilidades eliminadas con éxito.
  *         content:
  *           application/json:
  *             schema:
@@ -236,12 +241,12 @@ router.post(
  *               properties:
  *                 count:
  *                   type: integer
- *                   example: 20
- *                 messsage:
+ *                   example: 2
+ *                 message:
  *                   type: string
  *                   example: Disponibilidades eliminadas con éxito.
  *       400:
- *         description: Error en el parametro de query
+ *         description: Error en el formato de los parámetros de consulta.
  *         content:
  *           application/json:
  *             schema:
@@ -249,9 +254,9 @@ router.post(
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Las ids tienen que ser numeros enteros.
+ *                   example: Se espera un arreglo de disponibilidades en el formato day,slot.
  *       500:
- *         description: Error interno del sistema
+ *         description: Error interno del sistema.
  *         content:
  *           application/json:
  *             schema:

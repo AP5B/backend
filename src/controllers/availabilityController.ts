@@ -138,14 +138,8 @@ export const deleteAvailabilityController = async (
   req: Request,
   res: Response,
 ) => {
-  const avTupQuery = req.query.av as string[]; // ['1,2', '2,3']
-
-  if (Array.isArray(avTupQuery) === false) {
-    throw new HttpError(
-      400,
-      "Se espera un arreglo de disponibilidades en el formato day,slot.",
-    );
-  }
+  const avParam = req.query.av;
+  const avTupQuery = Array.isArray(avParam) ? avParam : [avParam as string]; // ['1,2', '2,3']
 
   if (!avTupQuery || avTupQuery.length === 0) {
     throw new HttpError(
@@ -160,7 +154,7 @@ export const deleteAvailabilityController = async (
       throw new HttpError(400, `Par con formato inválido.`);
     }
 
-    const split = x.split(",") as [string, string];
+    const split = (x as string).split(",") as [string, string];
     if (split.length != 2) {
       throw new HttpError(400, "Formato de par inválido. Deben ser day,slot");
     }
