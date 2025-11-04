@@ -67,12 +67,46 @@ const router = Router();
  *                 type: object
  *                 properties:
  *                   data:
- *                     type: array
- *                     items:
- *                       $ref: "#/components/schemas/availability"
- *                   count:
- *                     type: integer
- *                     example: 3
+ *                     type: object
+ *                     properties:
+ *                       1:
+ *                        type: array
+ *                        items:
+ *                          type: number
+ *                        example: []
+ *                       2:
+ *                        type: array
+ *                        items:
+ *                          type: number
+ *                        example: [12, 13, 18, 19]
+ *                       3:
+ *                        type: array
+ *                        items:
+ *                          type: number
+ *                        example: []
+ *                       4:
+ *                        type: array
+ *                        items:
+ *                          type: number
+ *                        example: []
+ *                       5:
+ *                        type: array
+ *                        items:
+ *                          type: number
+ *                        example: [14,15,16,17]
+ *                       6:
+ *                        type: array
+ *                        items:
+ *                          type: number
+ *                        example: []
+ *                       7:
+ *                        type: array
+ *                        items:
+ *                          type: number
+ *                        example: []
+ *                   message:
+ *                     type: string
+ *                     example: "Disponibilidades obtenidas con éxito."
  *         400:
  *           description: Error en la solicitud
  *           content:

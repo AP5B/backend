@@ -92,6 +92,7 @@ export const createAvailabilitiesController = async (
   res.status(201).send({
     data: av,
     count: av.length,
+    message: "Disponibilidades creadas con éxito.",
   });
 };
 
@@ -107,7 +108,7 @@ export const getAvailabilityController = async (
   const av = await getAvailailitiesService(teacherId);
   res.status(200).send({
     data: av,
-    count: av.length,
+    message: "Disponibilidades obtenidas con éxito.",
   });
 };
 

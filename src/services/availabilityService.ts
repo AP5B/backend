@@ -52,12 +52,32 @@ export const saveAvailabilityService = async (
 export const getAvailailitiesService = async (teacherId: number) => {
   try {
     const avties = await prisma.availability.findMany({
+      select: {
+        day: true,
+        slot: true,
+      },
       where: {
         userId: teacherId,
       },
+      orderBy: [{ day: "asc" }, { slot: "asc" }],
     });
 
-    return avties;
+    const grouped = Object.create({
+      "1": [],
+      "2": [],
+      "3": [],
+      "4": [],
+      "5": [],
+      "6": [],
+      "7": [],
+    });
+
+    avties.forEach((av) => {
+      // Node 20+
+      grouped[av.day].push(av.slot);
+    });
+
+    return grouped;
   } catch (err) {
     console.log(err);
     throw new HttpError(500, "Error interno del sistema.");
