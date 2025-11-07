@@ -5,6 +5,7 @@ import {
   createClassOfferService,
   editClassOfferService,
   destroyClassOfferService,
+  getMyClassOffersService,
   classOfferQuery,
   Category,
 } from "../services/classOfferServices";
@@ -174,5 +175,28 @@ export const deleteClassOfferController = async (
   res.status(200).send({
     deleted: deleteClass,
     message: "Oferta de clase eliminada con éxito.",
+  });
+};
+
+export const getMyClassOffersController = async (
+  req: Request,
+  res: Response,
+) => {
+  const userId = res.locals.user.id;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const normPage = page > 0 ? page : 1;
+  const normLimit = limit > 0 ? limit : 10;
+
+  const classOffers = await getMyClassOffersService(
+    userId,
+    normPage,
+    normLimit,
+  );
+
+  res.status(200).json({
+    authorId: userId,
+    total: classOffers.length,
+    data: classOffers,
   });
 };

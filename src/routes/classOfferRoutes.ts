@@ -4,8 +4,9 @@ import {
   getClassOfferByIdController,
   createClassOfferController,
   editClassOfferController,
-  deleteClassOfferController
-} from "../controllers/classOfferController"
+  deleteClassOfferController,
+  getMyClassOffersController,
+} from "../controllers/classOfferController";
 import { authenticate, autorize } from "../middlewares/authMiddleware";
 
 const router = Router();
@@ -79,11 +80,16 @@ const router = Router();
  *                     type: string
  *                     example: Usuario no tiene rol Teacher.
  */
-router.get("/protected", authenticate, autorize("Teacher"), (req: Request,res: Response) => {
-  res.status(200).json({
-    message: "Esta es una ruta protegida, acceso exitoso",
-  });
-})
+router.get(
+  "/protected",
+  authenticate,
+  autorize("Teacher"),
+  (req: Request, res: Response) => {
+    res.status(200).json({
+      message: "Esta es una ruta protegida, acceso exitoso",
+    });
+  },
+);
 
 /**
  * @swagger
@@ -168,10 +174,82 @@ router.get("/protected", authenticate, autorize("Teacher"), (req: Request,res: R
  *                         type: number
  *                         example: 4
  */
-router.get("/", getClassOffersController)
+router.get("/", getClassOffersController);
 
 /**
- * 
+ * @swagger
+ * /class-offer/me:
+ *   get:
+ *     summary: Obtener todas las ofertas de clase del profesor autenticado
+ *     description: Retorna todas las ofertas de clase creadas por el usuario autenticado.
+ *     tags:
+ *       - Class Offer
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *           minimum: 1
+ *         description: Número de página, empezando por 1
+ *         required: false
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Cantidad de elementos por página
+ *         required: false
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de ofertas del profesor autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 authorId:
+ *                   type: integer
+ *                   example: 5
+ *                 total:
+ *                   type: integer
+ *                   example: 2
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: "#/components/schemas/classOffer"
+ *       401:
+ *         description: El usuario no está autenticado o no tiene el rol requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no tiene rol Teacher
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error interno del servidor
+ */
+router.get(
+  "/me",
+  authenticate,
+  autorize("Teacher"),
+  getMyClassOffersController,
+);
+
+/**
+ *
  * @swagger
  * /class-offer/{classId}:
  *   get:
@@ -377,7 +455,12 @@ router.post("/", authenticate, autorize("Teacher"), createClassOfferController);
  *                   type: string
  *                   example: Error interno del servidor
  */
-router.patch("/:classId", authenticate, autorize("Teacher"), editClassOfferController);
+router.patch(
+  "/:classId",
+  authenticate,
+  autorize("Teacher"),
+  editClassOfferController,
+);
 
 /**
  * @swagger
@@ -408,7 +491,7 @@ router.patch("/:classId", authenticate, autorize("Teacher"), editClassOfferContr
  *                   $ref: "#/components/schemas/classOffer"
  *                 message:
  *                   type: string
- *                   example: Usuario eliminado con éxito.
+ *                   example: Oferta de clase eliminada con éxito.
  *       400:
  *         description: Error en los datos de entrada
  *         content:
@@ -450,6 +533,11 @@ router.patch("/:classId", authenticate, autorize("Teacher"), editClassOfferContr
  *                   type: string
  *                   example: Error interno del servidor.
  */
-router.delete("/:classId", authenticate, autorize("Teacher"), deleteClassOfferController);
+router.delete(
+  "/:classId",
+  authenticate,
+  autorize("Teacher"),
+  deleteClassOfferController,
+);
 
-export default router
+export default router;
