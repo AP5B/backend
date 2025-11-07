@@ -8,4 +8,14 @@ module.exports = {
   globalSetup: "<rootDir>/__tests__/setup/jest.globalSetup.ts",
   globalTeardown: "<rootDir>/__tests__/setup/jest.globalTeardown.ts",
   verbose: true,
+  collectCoverage: true,
+  collectCoverageFrom: [
+    "src/controllers/**/*.ts",
+    "src/services/**/*.ts",
+    "src/routes/**/*.ts",
+    "!src/**/*.d.ts",
+    "!src/**/index.ts",
+    "!src/**/healthRoutes.ts",
+    "!src/**/exampleRoutes.ts",
+  ],
 };
