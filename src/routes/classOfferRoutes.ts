@@ -95,8 +95,8 @@ router.get(
  * @swagger
  * /class-offer:
  *   get:
- *     summary: Ofertas de clase paginado
- *     description: Retorna una arreglo de tamaño `limit` con ofertas de clase
+ *     summary: Ofertas de clase paginadas
+ *     description: Retorna un arreglo de tamaño `limit` con ofertas de clases, incluyendo información del autor y su rating promedio.
  *     tags:
  *       - Class Offer
  *     parameters:
@@ -106,73 +106,115 @@ router.get(
  *           type: integer
  *           default: 1
  *           minimum: 1
- *         description: Número de página, empezando por 1
- *         required: false
+ *         description: Número de página, empezando en 1.
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
- *         description: Cantidad de elementos por página
- *         required: false
+ *         description: Cantidad de elementos por página.
  *       - in: query
  *         name: title
  *         schema:
  *           type: string
- *         description: String contenido en el titulo
- *         required: false
+ *         description: Filtrar por texto contenido en el título.
  *       - in: query
  *         name: category
  *         schema:
  *           type: string
  *           enum: [Calculo, Dinamica, Economia, Quimica, Computacion, Otro]
- *         description: Categoria de la oferta
- *         required: false
+ *         description: Categoría de la oferta.
  *       - in: query
  *         name: price
  *         schema:
  *           type: number
- *         description: Precio exacto
- *         required: false
+ *         description: Precio exacto.
  *       - in: query
  *         name: minPrice
  *         schema:
  *           type: number
- *         description: Precio mínimo
- *         required: false
+ *         description: Precio mínimo.
  *       - in: query
  *         name: maxPrice
  *         schema:
  *           type: number
- *         description: Precio máximo
- *         required: false
+ *         description: Precio máximo.
  *     responses:
  *       200:
- *         description: Registros encontrados
+ *         description: Registros encontrados.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   data:
- *                     $ref: "#/components/schemas/classOffer"
- *                   pagination:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
  *                     type: object
  *                     properties:
- *                       page:
+ *                       id:
  *                         type: number
  *                         example: 1
- *                       limit:
+ *                       title:
+ *                         type: string
+ *                         example: "clase 1"
+ *                       category:
+ *                         type: string
+ *                         example: "Otro"
+ *                       description:
+ *                         type: string
+ *                         example: "descripcion clase 1"
+ *                       price:
  *                         type: number
- *                         example: 10
- *                       totalItems:
- *                         type: number
- *                         example: 34
- *                       totalPages:
- *                         type: number
- *                         example: 4
+ *                         example: 100
+ *                       createdAt:
+ *                         type: string
+ *                         example: "2025-11-02"
+ *                       author:
+ *                         type: object
+ *                         properties:
+ *                           avgRating:
+ *                             type: number
+ *                             example: 3
+ *                           first_name:
+ *                             type: string
+ *                             example: "prueba"
+ *                           last_name_1:
+ *                             type: string
+ *                             example: "prueba"
+ *                           username:
+ *                             type: string
+ *                             example: "prueba"
+ *       400:
+ *         description: Parámetros de consulta inválidos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Parámetros inválidos"
+ *       404:
+ *         description: No se encontraron ofertas de clases.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No se encontraron registros"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Error interno del servidor"
  */
 router.get("/", getClassOffersController);
 
@@ -180,8 +222,8 @@ router.get("/", getClassOffersController);
  * @swagger
  * /class-offer/me:
  *   get:
- *     summary: Obtener todas las ofertas de clase del profesor autenticado
- *     description: Retorna todas las ofertas de clase creadas por el usuario autenticado.
+ *     summary: Obtener las ofertas de clase del profesor autenticado
+ *     description: Retorna una lista paginada de las ofertas de clase creadas por el usuario autenticado.
  *     tags:
  *       - Class Offer
  *     parameters:
@@ -191,37 +233,65 @@ router.get("/", getClassOffersController);
  *           type: integer
  *           default: 1
  *           minimum: 1
- *         description: Número de página, empezando por 1
+ *         description: Número de página, empezando por 1.
  *         required: false
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
- *         description: Cantidad de elementos por página
+ *         description: Cantidad de elementos por página.
  *         required: false
  *     security:
  *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: Lista de ofertas del profesor autenticado
+ *         description: Ofertas del profesor autenticado.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 authorId:
- *                   type: integer
- *                   example: 5
- *                 total:
- *                   type: integer
- *                   example: 2
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: "#/components/schemas/classOffer"
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 3
+ *                       title:
+ *                         type: string
+ *                         example: "clase 3"
+ *                       category:
+ *                         type: string
+ *                         example: "Otro"
+ *                       description:
+ *                         type: string
+ *                         example: "descripcion clase 3"
+ *                       price:
+ *                         type: number
+ *                         example: 200
+ *                       createdAt:
+ *                         type: string
+ *                         example: "2025-11-02"
+ *                       author:
+ *                         type: object
+ *                         properties:
+ *                           avgRating:
+ *                             type: integer
+ *                             example: 3
+ *                           first_name:
+ *                             type: string
+ *                             example: "prueba"
+ *                           last_name_1:
+ *                             type: string
+ *                             example: "prueba"
+ *                           username:
+ *                             type: string
+ *                             example: "prueba"
  *       401:
- *         description: El usuario no está autenticado o no tiene el rol requerido
+ *         description: El usuario no está autenticado o no tiene el rol requerido.
  *         content:
  *           application/json:
  *             schema:
@@ -231,7 +301,7 @@ router.get("/", getClassOffersController);
  *                   type: string
  *                   example: Usuario no tiene rol Teacher
  *       500:
- *         description: Error interno del servidor
+ *         description: Error interno del servidor.
  *         content:
  *           application/json:
  *             schema:
@@ -239,8 +309,9 @@ router.get("/", getClassOffersController);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Error interno del servidor
+ *                   example: Error interno del servidor.
  */
+
 router.get(
   "/me",
   authenticate,
@@ -249,12 +320,11 @@ router.get(
 );
 
 /**
- *
  * @swagger
  * /class-offer/{classId}:
  *   get:
  *     summary: Obtener oferta de clase por id
- *     description: Retorna una oferta de clase de oferta identificada por su id
+ *     description: Retorna la información de una oferta de clase junto con sus reviews paginados.
  *     tags:
  *       - Class Offer
  *     parameters:
@@ -263,16 +333,82 @@ router.get(
  *         required: true
  *         schema:
  *           type: integer
- *           description: Id de la oferta de clase
+ *         description: ID de la oferta de clase.
+ *       - in: query
+ *         name: reviewsPage
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página para los reviews (paginación).
+ *       - in: query
+ *         name: reviewsLimit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *         description: Cantidad de reviews por página.
  *     responses:
  *       200:
- *         description: Clase encontrada
+ *         description: Clase encontrada correctamente.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: "#/components/schemas/classOffer"
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 title:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                 price:
+ *                   type: number
+ *                 createdAt:
+ *                   type: string
+ *                   example: "2025-11-02"
+ *                 category:
+ *                   type: string
+ *                 author:
+ *                   type: object
+ *                   properties:
+ *                     username:
+ *                       type: string
+ *                     first_name:
+ *                       type: string
+ *                     last_name_1:
+ *                       type: string
+ *                     availabilities:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           day:
+ *                             type: number
+ *                           slot:
+ *                             type: number
+ *                     receivedReviews:
+ *                       type: array
+ *                       description: Reviews paginados del profesor.
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           rating:
+ *                             type: integer
+ *                           content:
+ *                             type: string
+ *                           createdAt:
+ *                             type: string
+ *                             example: "2025-10-31"
+ *                           reviewer:
+ *                             type: object
+ *                             properties:
+ *                               username:
+ *                                 type: string
  *       400:
- *         description: Error en los datos de entrada
+ *         description: Error en los datos de entrada (ID inválida).
  *         content:
  *           application/json:
  *             schema:
@@ -282,7 +418,7 @@ router.get(
  *                   type: string
  *                   example: La id, de la oferta de clase, debe ser un número.
  *       404:
- *         description: No se encontro la clase con id `classId`
+ *         description: No se encontró la oferta de clase con el ID especificado.
  *         content:
  *           application/json:
  *             schema:
@@ -290,9 +426,9 @@ router.get(
  *               properties:
  *                 message:
  *                   type: string
- *                   example: No existe una oferta de clase con id 1
+ *                   example: No existe una oferta de clase con id {classId}
  *       500:
- *         description: Error interno del servidor
+ *         description: Error interno del servidor.
  *         content:
  *           application/json:
  *             schema:
@@ -302,6 +438,7 @@ router.get(
  *                   type: string
  *                   example: Error interno del servidor
  */
+
 router.get("/:classId", getClassOfferByIdController);
 
 /**
