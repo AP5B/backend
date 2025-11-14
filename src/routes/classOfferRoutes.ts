@@ -185,6 +185,15 @@ router.get(
  *                           username:
  *                             type: string
  *                             example: "prueba"
+ *                           availabilities:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 day:
+ *                                   type: number
+ *                                 slot:
+ *                                   type: number
  *       400:
  *         description: Parámetros de consulta inválidos.
  *         content:
