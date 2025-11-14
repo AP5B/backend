@@ -96,7 +96,6 @@ export const getClassOffersService = async (
             receivedReviews: {
               select: { rating: true },
             },
-            availabilities: { select: { day: true, slot: true } },
           },
         },
       },
