@@ -90,6 +90,7 @@ export const getClassOffersService = async (
         createdAt: true,
         author: {
           select: {
+            id: true,
             first_name: true,
             last_name_1: true,
             username: true,
@@ -149,6 +150,7 @@ export const getClassOfferByIdService = async (
         category: true,
         author: {
           select: {
+            id: true,
             username: true,
             first_name: true,
             last_name_1: true,
@@ -321,6 +323,7 @@ export const getMyClassOffersService = async (
         createdAt: true,
         author: {
           select: {
+            id: true,
             first_name: true,
             last_name_1: true,
             username: true,
