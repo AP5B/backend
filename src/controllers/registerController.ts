@@ -120,7 +120,7 @@ export const registerUserController = async (req: Request, res: Response) => {
 
   setAuthCookies(res, token, refreshToken);
 
-  const { password, ...userWithoutPassword } = newUser;
+  const { password:_password, ...userWithoutPassword } = newUser;
 
   return res.status(201).json({
     user: userWithoutPassword,
