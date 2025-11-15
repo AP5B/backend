@@ -12,7 +12,8 @@ import availabilityRoutes from "./routes/availabilityRoutes";
 import cookieParser from "cookie-parser";
 import env from "./config/env";
 import reviewsRoutes from "./routes/reviewsRoutes";
-import paymentRoutes from "./routes/transactionRoutes";
+import classRequestRoutes from "./routes/classRequestRoutes";
+import transactionRoutes from "./routes/transactionRoutes";
 
 // Swagger setup
 const options = {
@@ -61,7 +62,8 @@ export const createApp = () => {
   app.use("/availability/", availabilityRoutes);
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // Swagger
   app.use("/reviews/", reviewsRoutes);
-  app.use("/transaction/", paymentRoutes);
+  app.use("/class-requests/", classRequestRoutes);
+  app.use("/transaction/", transactionRoutes);
 
   app.use(errorHandler);
   return app;
