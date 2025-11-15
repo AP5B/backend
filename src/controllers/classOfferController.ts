@@ -5,6 +5,7 @@ import {
   createClassOfferService,
   editClassOfferService,
   destroyClassOfferService,
+  getMyClassOffersService,
   classOfferQuery,
   Category,
 } from "../services/classOfferServices";
@@ -72,20 +73,10 @@ export const getClassOffersController = async (req: Request, res: Response) => {
 
   console.log(query);
 
-  const [classOffers, totalItems, totalPages] = await getClassOffersService(
-    normPage,
-    normLimit,
-    query,
-  );
+  const classOffers = await getClassOffersService(normPage, normLimit, query);
 
   res.status(200).json({
     data: classOffers,
-    pagination: {
-      page: normPage,
-      limit: normLimit,
-      totalItems: totalItems,
-      totalPages: totalPages,
-    },
   });
 };
 
@@ -94,13 +85,22 @@ export const getClassOfferByIdController = async (
   res: Response,
 ) => {
   const classId = Number(req.params.classId);
+  const page = parseInt(req.query.reviewsPage as string) || 1;
+  const limit = parseInt(req.query.reviewsLimit as string) || 5;
+  const normPage = page > 0 ? page : 1;
+  const normLimit = limit > 0 ? limit : 5;
+
   if (isNaN(classId))
     throw new HttpError(
       400,
       "La id, de la oferta de clase, debe ser un número.",
     );
 
-  const classOffer = await getClassOfferByIdService(classId);
+  const classOffer = await getClassOfferByIdService(
+    classId,
+    normPage,
+    normLimit,
+  );
 
   res.status(200).json(classOffer);
 };
@@ -174,5 +174,26 @@ export const deleteClassOfferController = async (
   res.status(200).send({
     deleted: deleteClass,
     message: "Oferta de clase eliminada con éxito.",
+  });
+};
+
+export const getMyClassOffersController = async (
+  req: Request,
+  res: Response,
+) => {
+  const userId = res.locals.user.id;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const normPage = page > 0 ? page : 1;
+  const normLimit = limit > 0 ? limit : 10;
+
+  const classOffers = await getMyClassOffersService(
+    userId,
+    normPage,
+    normLimit,
+  );
+
+  res.status(200).json({
+    data: classOffers,
   });
 };
