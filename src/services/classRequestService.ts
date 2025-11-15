@@ -58,7 +58,8 @@ export interface TutorClassRequestResponse {
  */
 export const createClassRequestService = async (
   userId: number,
-  body: CreateClassRequestBody,) => {
+  body: CreateClassRequestBody,
+) => {
   try {
     // Verificar que la clase exista
     const classOffer = await prisma.classOffer.findUnique({
@@ -66,14 +67,6 @@ export const createClassRequestService = async (
     });
     if (!classOffer) {
       throw new HttpError(404, "La clase especificada no existe");
-    }
-
-    // Verificar que el usuario exista
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new HttpError(404, "El usuario especificado no existe");
     }
 
     // POSIBLE ELIMINACIÓN: PUEDE QUE UN USER SI PUEDA TENER MAS DE UNA RESERVA PARA LA MISMA CLASE
@@ -121,7 +114,8 @@ export const createClassRequestService = async (
 export const getUserClassRequestService = async (
   userId: number,
   page: number,
-  limit: number, ) => {
+  limit: number,
+) => {
   try {
     // Validar existencia del usuario
     const user = await prisma.user.findUnique({
@@ -245,7 +239,6 @@ export const getTutorClassRequestsService = async (
   }
 };
 
-
 /**
  * Actualiza el estado de una solicitud de clase, validando que el tutor sea el autor.
  *
@@ -257,7 +250,8 @@ export const getTutorClassRequestsService = async (
 export const updateClassRequestStateService = async (
   tutorId: number,
   classRequestId: number,
-  newState: ClassRequestState ) => {
+  newState: ClassRequestState,
+) => {
   try {
     // Buscar la solicitud con su oferta asociada
     const classRequest = await prisma.classRequest.findUnique({
@@ -273,7 +267,10 @@ export const updateClassRequestStateService = async (
 
     // Validar que el tutor sea el autor de la oferta
     if (classRequest.classOffer.authorId !== tutorId) {
-      throw new HttpError(403, "No tienes permisos para modificar esta solicitud");
+      throw new HttpError(
+        403,
+        "No tienes permisos para modificar esta solicitud",
+      );
     }
 
     // Validar que el estado sea distinto
@@ -316,7 +313,8 @@ export const getClassRequestsByClassService = async (
   tutorId: number,
   classOfferId: number,
   page: number,
-  limit: number ) => {
+  limit: number,
+) => {
   try {
     // Validar que la clase exista y pertenezca al tutor
     const classOffer = await prisma.classOffer.findUnique({
