@@ -14,6 +14,8 @@ export type ClassRequestState = (typeof classRequestStates)[number];
  */
 export interface CreateClassRequestBody {
   classOfferId: number;
+  day: number;
+  slot: number;
 }
 
 /**
@@ -69,34 +71,62 @@ export const createClassRequestService = async (
       throw new HttpError(404, "La clase especificada no existe");
     }
 
-    // POSIBLE ELIMINACIÓN: PUEDE QUE UN USER SI PUEDA TENER MAS DE UNA RESERVA PARA LA MISMA CLASE
-    // // Verificar si ya existe una reserva del mismo usuario para esta clase
-    // const existingRequest = await prisma.classRequest.findFirst({
-    //   where: {
-    //     classOfferId: body.classOfferId,
-    //     userId,
-    //   },
-    // });
+    const existingRequest = await prisma.classRequest.findFirst({
+      where: {
+        classOfferId: body.classOfferId,
+        userId: userId,
+        day: body.day,
+        slot: body.slot,
+      },
+    });
 
-    // if (existingRequest) {
-    //   throw new HttpError(409, "Ya existe una reserva para esta clase");
-    // }
+    if (existingRequest) {
+      throw new HttpError(
+        409,
+        "Ya existe una reserva para esta clase en ese horario",
+      );
+    }
 
     // Crear la reserva
     const newReservation = await prisma.classRequest.create({
       data: {
         classOfferId: body.classOfferId,
-        userId,
+        userId: userId,
         state: "Pending", // estado inicial
+        day: body.day,
+        slot: body.slot,
       },
-      include: {
+      select: {
+        id: true,
+        day: true,
+        slot: true,
+        createdAt: true,
+        state: true,
         classOffer: {
-          select: { id: true, title: true, authorId: true, price: true },
+          select: {
+            title: true,
+            price: true,
+            category: true,
+            author: {
+              select: {
+                username: true,
+                first_name: true,
+                last_name_1: true,
+              },
+            },
+          },
         },
       },
     });
 
-    return newReservation as ClassRequestResponse;
+    const formattedCreatedAt = newReservation.createdAt
+      .toISOString()
+      .split("T")[0];
+
+    return {
+      ...newReservation,
+      createdAt: formattedCreatedAt,
+    };
   } catch (error: unknown) {
     if (error instanceof HttpError) throw error;
     throw new HttpError(500, "Error al crear la reserva");
@@ -117,26 +147,29 @@ export const getUserClassRequestService = async (
   limit: number,
 ) => {
   try {
-    // Validar existencia del usuario
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new HttpError(404, "El usuario especificado no existe");
-    }
-
     const offset = (page - 1) * limit;
 
     // Buscar reservas con datos de la clase
     const classRequests = await prisma.classRequest.findMany({
       where: { userId },
-      include: {
+      select: {
+        id: true,
+        day: true,
+        slot: true,
+        createdAt: true,
+        state: true,
         classOffer: {
           select: {
-            id: true,
             title: true,
-            authorId: true,
             price: true,
+            category: true,
+            author: {
+              select: {
+                username: true,
+                first_name: true,
+                last_name_1: true,
+              },
+            },
           },
         },
       },
@@ -147,10 +180,12 @@ export const getUserClassRequestService = async (
       take: limit,
     });
 
-    const totalItems = await prisma.classRequest.count({ where: { userId } });
-    const totalPages = Math.ceil(totalItems / limit);
+    const formattedClassRequests = classRequests.map((classReq) => {
+      const formattedCreatedAt = classReq.createdAt.toISOString().split("T")[0];
+      return { ...classReq, createdAt: formattedCreatedAt };
+    });
 
-    return [classRequests as ClassRequestResponse[], totalItems, totalPages];
+    return formattedClassRequests;
   } catch (error: unknown) {
     console.error(error);
     if (error instanceof HttpError) throw error;
@@ -171,14 +206,6 @@ export const getTutorClassRequestsService = async (
   limit: number,
 ) => {
   try {
-    // Validar existencia del tutor
-    const tutor = await prisma.user.findUnique({
-      where: { id: tutorId },
-    });
-    if (!tutor) {
-      throw new HttpError(404, "El tutor especificado no existe");
-    }
-
     const offset = (page - 1) * limit;
 
     // Buscar solicitudes relacionadas con las clases del tutor
@@ -186,17 +213,22 @@ export const getTutorClassRequestsService = async (
       where: {
         classOffer: { authorId: tutorId },
       },
-      include: {
+      select: {
+        id: true,
+        state: true,
+        day: true,
+        slot: true,
+        createdAt: true,
         user: {
           select: {
-            id: true,
             username: true,
             email: true,
+            first_name: true,
+            last_name_1: true,
           },
         },
         classOffer: {
           select: {
-            id: true,
             title: true,
             category: true,
             price: true,
@@ -208,30 +240,12 @@ export const getTutorClassRequestsService = async (
       take: limit,
     });
 
-    const totalItems = await prisma.classRequest.count({
-      where: { classOffer: { authorId: tutorId } },
+    const formattedClassRequests = classRequests.map((classReq) => {
+      const formattedCreatedAt = classReq.createdAt.toISOString().split("T")[0];
+      return { ...classReq, createdAt: formattedCreatedAt };
     });
-    const totalPages = Math.ceil(totalItems / limit);
 
-    // Mapear al formato de respuesta deseado
-    const data: TutorClassRequestResponse[] = classRequests.map((cr) => ({
-      id: cr.id,
-      state: cr.state,
-      createdAt: cr.createdAt,
-      student: {
-        id: cr.user.id,
-        username: cr.user.username,
-        email: cr.user.email,
-      },
-      classOffer: {
-        id: cr.classOffer.id,
-        title: cr.classOffer.title,
-        category: cr.classOffer.category,
-        price: cr.classOffer.price,
-      },
-    }));
-
-    return { data, totalItems, totalPages };
+    return formattedClassRequests;
   } catch (error: unknown) {
     console.error(error);
     if (error instanceof HttpError) throw error;
@@ -256,7 +270,8 @@ export const updateClassRequestStateService = async (
     // Buscar la solicitud con su oferta asociada
     const classRequest = await prisma.classRequest.findUnique({
       where: { id: classRequestId },
-      include: {
+      select: {
+        state: true,
         classOffer: { select: { authorId: true } },
       },
     });
@@ -273,28 +288,39 @@ export const updateClassRequestStateService = async (
       );
     }
 
-    // Validar que el estado sea distinto
-    if (classRequest.state === newState) {
-      throw new HttpError(400, "La solicitud ya se encuentra en este estado");
-    }
-
-    // Validar que el nuevo estado sea válido
-    if (!["Approved", "Rejected", "Pending"].includes(newState)) {
-      throw new HttpError(400, "Estado inválido");
-    }
-
     // Actualizar el estado
     const updatedRequest = await prisma.classRequest.update({
       where: { id: classRequestId },
       data: { state: newState },
-      include: {
+      select: {
+        id: true,
+        state: true,
+        day: true,
+        slot: true,
+        createdAt: true,
+        user: {
+          select: {
+            username: true,
+            email: true,
+            first_name: true,
+            last_name_1: true,
+          },
+        },
         classOffer: {
-          select: { id: true, title: true },
+          select: {
+            title: true,
+            category: true,
+            price: true,
+          },
         },
       },
     });
 
-    return updatedRequest;
+    const formattedCreatedAt = updatedRequest.createdAt
+      .toISOString()
+      .split("T")[0];
+
+    return { ...updatedRequest, createdAt: formattedCreatedAt };
   } catch (error: unknown) {
     console.error(error);
     if (error instanceof HttpError) throw error;
@@ -319,7 +345,9 @@ export const getClassRequestsByClassService = async (
     // Validar que la clase exista y pertenezca al tutor
     const classOffer = await prisma.classOffer.findUnique({
       where: { id: classOfferId },
+      select: { authorId: true },
     });
+
     if (!classOffer) {
       throw new HttpError(404, "La clase especificada no existe");
     }
@@ -332,17 +360,22 @@ export const getClassRequestsByClassService = async (
     // Obtener reservas de la clase
     const classRequests = await prisma.classRequest.findMany({
       where: { classOfferId },
-      include: {
+      select: {
+        id: true,
+        state: true,
+        day: true,
+        slot: true,
+        createdAt: true,
         user: {
           select: {
-            id: true,
             username: true,
             email: true,
+            first_name: true,
+            last_name_1: true,
           },
         },
         classOffer: {
           select: {
-            id: true,
             title: true,
             category: true,
             price: true,
@@ -354,30 +387,12 @@ export const getClassRequestsByClassService = async (
       take: limit,
     });
 
-    const totalItems = await prisma.classRequest.count({
-      where: { classOfferId },
+    const formattedClassRequests = classRequests.map((classReq) => {
+      const formattedCreatedAt = classReq.createdAt.toISOString().split("T")[0];
+      return { ...classReq, createdAt: formattedCreatedAt };
     });
-    const totalPages = Math.ceil(totalItems / limit);
 
-    // Formatear respuesta según TutorClassRequestResponse
-    const data: TutorClassRequestResponse[] = classRequests.map((cr) => ({
-      id: cr.id,
-      state: cr.state,
-      createdAt: cr.createdAt,
-      student: {
-        id: cr.user.id,
-        username: cr.user.username,
-        email: cr.user.email,
-      },
-      classOffer: {
-        id: cr.classOffer.id,
-        title: cr.classOffer.title,
-        category: cr.classOffer.category,
-        price: cr.classOffer.price,
-      },
-    }));
-
-    return { data, totalItems, totalPages };
+    return formattedClassRequests;
   } catch (error: unknown) {
     console.error("Error en getClassRequestsByClassService:", error);
     if (error instanceof HttpError) throw error;
