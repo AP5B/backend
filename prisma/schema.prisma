@@ -36,10 +36,10 @@ enum ClassRequestState {
 
 model User {
   id              Int             @id @default(autoincrement())
-  username        String          @unique
-  first_name      String          @db.VarChar(20)
-  last_name_1     String          @db.VarChar(20)
-  last_name_2     String?         @db.VarChar(20)
+  username        String          @unique @db.VarChar(20)
+  first_name      String          @db.VarChar(30)
+  last_name_1     String          @db.VarChar(30)
+  last_name_2     String?         @db.VarChar(30)
   email           String          @unique @db.VarChar(60)
   password        String          @db.VarChar(255)
   role            UserRole        

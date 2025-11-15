@@ -24,14 +24,24 @@ export const registerUserService = async (
   regBody: Omit<registerRequestBody, "confirm_password">,
 ) => {
   try {
-    const existingUser = await prisma.user.findFirst({
+    const existingUsername = await prisma.user.findUnique({
       where: {
-        OR: [{ email: regBody.email }, { username: regBody.username }],
+        username: regBody.username,
+      },
+    });
+    
+    const existingEmail = await prisma.user.findUnique({
+      where: {
+        email: regBody.email,
       },
     });
 
-    if (existingUser) {
-      throw new HttpError(409, "Nombre de usuario o email ya está en uso.");
+    if (existingUsername) {
+      throw new HttpError(409, "El nombre de usuario ya está en uso.");
+    }
+
+    if (existingEmail) {
+      throw new HttpError(409, "El email ya está en uso.");
     }
 
     const hashedPassword = await bcrypt.hash(regBody.password, 10);
