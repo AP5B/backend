@@ -1,4 +1,4 @@
-import { UserRole } from "@prisma/client";
+import { Prisma, UserRole, User } from "@prisma/client";
 import { HttpError } from "../middlewares/errorHandler";
 import bcrypt from "bcrypt";
 import jwt, { TokenExpiredError } from "jsonwebtoken";
@@ -16,44 +16,44 @@ export interface registerRequestBody {
   email: string;
   password: string;
   role: UserRole;
-  phone?: string;
   confirm_password: string;
 }
 
+export type RegisterServiceBody = Omit<registerRequestBody, "confirm_password">;
+
 export const registerUserService = async (
-  regBody: Omit<registerRequestBody, "confirm_password">,
-) => {
+  regBody: RegisterServiceBody,
+): Promise<User> => {
   try {
-    const existingUsername = await prisma.user.findUnique({
-      where: {
-        username: regBody.username,
-      },
-    });
-    
-    const existingEmail = await prisma.user.findUnique({
-      where: {
-        email: regBody.email,
-      },
-    });
-
-    if (existingUsername) {
-      throw new HttpError(409, "El nombre de usuario ya está en uso.");
-    }
-
-    if (existingEmail) {
-      throw new HttpError(409, "El email ya está en uso.");
-    }
-
     const hashedPassword = await bcrypt.hash(regBody.password, 10);
     const userData = { ...regBody, password: hashedPassword };
 
-    return await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: userData,
     });
+
+    return newUser;
   } catch (error: unknown) {
     if (error instanceof HttpError) {
       throw error;
     }
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const target = (error.meta?.target ?? []) as string[];
+
+      if (target.includes("username")) {
+        throw new HttpError(409, "El nombre de usuario ya está en uso.");
+      }
+      if (target.includes("email")) {
+        throw new HttpError(409, "El email ya está en uso.");
+      }
+
+      throw new HttpError(409, "Los datos de registro ya están en uso.");
+    }
+
     throw new HttpError(500, "Error interno del servidor");
   }
 };
@@ -64,14 +64,20 @@ export const refreshTokenService = async (refreshToken: string) => {
       refreshToken,
       env.jwt_secret,
     ) as jwt.JwtPayload;
+
     const userId = decodedToken.id;
+    if (!userId) {
+      throw new HttpError(401, "Token inválido");
+    }
+
     const user = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
+      where: { id: userId },
     });
 
-    if (!user) return;
+    if (!user) {
+      throw new HttpError(401, "Usuario no encontrado");
+    }
+
     const { token: newToken, refreshToken: newRefreshToken } = generateTokens(
       user.id,
       user.email,
@@ -79,7 +85,8 @@ export const refreshTokenService = async (refreshToken: string) => {
       user.username,
     );
 
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: _password, ...userWithoutPassword } = user;
+
     return {
       token: newToken,
       refreshToken: newRefreshToken,
@@ -88,6 +95,9 @@ export const refreshTokenService = async (refreshToken: string) => {
   } catch (error: unknown) {
     if (error instanceof TokenExpiredError) {
       throw new HttpError(401, "Token de refresco expirado");
+    }
+    if (error instanceof HttpError) {
+      throw error;
     }
     throw new HttpError(500, "Error interno del servidor");
   }

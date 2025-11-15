@@ -16,9 +16,12 @@ router.post("/register", registerUserController);
  *     summary: Registro de usuario
  *     description: |
  *       Registra un nuevo usuario en el sistema y devuelve sus datos junto con los tokens de autenticación.
- *       El backend valida los campos (patrones, longitudes y formato). El campo `role` debe corresponder
- *       al dominio del correo (por ejemplo, `uc.cl` o `estudiante.uc.cl` -> `Teacher`). Si el frontend envía
- *       `role`, debe coincidir con la deducción del backend.
+ *       Validaciones aplicadas:
+ *         - Se hace `trim()` en username, nombre, apellidos e email).
+ *         - `username`: solo minúsculas, números y guiones bajos; 5-20 caracteres.
+ *         - `first_name`, `last_name_1`, `last_name_2`: letras (incluye acentos), espacios y '-; 3-30 caracteres.
+ *         - `email`: formato válido y máximo 60 caracteres; se convierte a minúsculas para obtener el `role`.
+ *         - `password`: mínimo 8 caracteres; `confirm_password` debe coincidir.
  *     tags:
  *       - Auth
  *     requestBody:
@@ -37,34 +40,33 @@ router.post("/register", registerUserController);
  *             properties:
  *               username:
  *                 type: string
- *                 description: "Solo minúsculas, números y guiones bajos. Largo entre 5 y 20 caracteres. Regex: ^[a-z0-9_]+$"
+ *                 description: "Solo minúsculas, números y guiones bajos. Largo entre 5 y 20 caracteres."
  *                 minLength: 5
  *                 maxLength: 20
- *                 pattern: '^[a-z0-9_]+'
  *                 example: usuario_01
  *               first_name:
  *                 type: string
- *                 description: "Nombre. Letras (incluye acentos) y espacios permitidos. Largo entre 3 y 30 caracteres."
+ *                 description: "Nombre. Letras (incluye acentos), espacios y -' permitidos. Largo entre 3 y 30 caracteres."
  *                 minLength: 3
  *                 maxLength: 30
  *                 example: Juan
  *               last_name_1:
  *                 type: string
- *                 description: "Primer apellido. Mismas reglas que el nombre."
+ *                 description: "Primer apellido."
  *                 minLength: 3
  *                 maxLength: 30
  *                 example: Pérez
  *               last_name_2:
  *                 type: string
  *                 nullable: true
- *                 description: "Segundo apellido (opcional). Mismas reglas que el nombre."
+ *                 description: "Segundo apellido (opcional)."
  *                 minLength: 3
  *                 maxLength: 30
  *                 example: Gómez
  *               email:
  *                 type: string
  *                 format: email
- *                 description: "Email válido. Máximo 60 caracteres. El dominio puede determinar el rol (p.ej. uc.cl)."
+ *                 description: "Email válido. Máximo 60 caracteres. El dominio se utiliza para inferir el role (uc.cl o estudiante.uc.cl <-> Teacher, otro email <-> Student)."
  *                 maxLength: 60
  *                 example: nombre@uc.cl
  *               password:
@@ -76,25 +78,12 @@ router.post("/register", registerUserController);
  *               confirm_password:
  *                 type: string
  *                 format: password
- *                 description: "Confirmación de contraseña. Debe ser igual al campo `password`."
+ *                 description: "Confirmación de contraseña. Debe ser igual a `password`."
  *                 minLength: 8
  *                 example: strongPassword123
- *               role:
- *                 type: string
- *                 description: "(Opcional) 'Student', 'Teacher' o 'Admin'. El backend validará que coincida con el dominio del email."
- *                 enum:
- *                   - Student
- *                   - Teacher
- *                   - Admin
- *                 example: Student
- *               phone:
- *                 type: string
- *                 nullable: true
- *                 description: "Número telefónico opcional."
- *                 example: '+56912345678'
  *     responses:
  *       201:
- *         description: Usuario registrado correctamente. Devuelve el usuario (sin contraseña) y los tokens.
+ *         description: Usuario registrado correctamente. Se devuelve el usuario (sin password), tokens y un mensaje.
  *         content:
  *           application/json:
  *             schema:
@@ -102,6 +91,7 @@ router.post("/register", registerUserController);
  *               properties:
  *                 user:
  *                   type: object
+ *                   description: "Usuario creado (la contraseña no se expone)."
  *                   properties:
  *                     id:
  *                       type: integer
@@ -127,10 +117,6 @@ router.post("/register", registerUserController);
  *                     role:
  *                       type: string
  *                       example: Teacher
- *                     phone:
- *                       type: string
- *                       nullable: true
- *                       example: '+56912345678'
  *                     isDeleted:
  *                       type: boolean
  *                       example: false
@@ -140,8 +126,11 @@ router.post("/register", registerUserController);
  *                 refreshToken:
  *                   type: string
  *                   description: Token JWT de refresco
+ *                 message:
+ *                   type: string
+ *                   example: "Usuario tipo Teacher registrado correctamente"
  *       400:
- *         description: Error en los datos de entrada (validación fallida). El cuerpo incluirá un mensaje describiendo el problema.
+ *         description: Error de validación en los datos de entrada. El `message` describe el motivo (p.ej. username inválido, rol no coincide, contraseñas no coinciden).
  *         content:
  *           application/json:
  *             schema:
@@ -152,9 +141,9 @@ router.post("/register", registerUserController);
  *                   example: 400
  *                 message:
  *                   type: string
- *                   example: "El username debe tener entre 5 y 20 caracteres"
+ *                   example: "El rol no coincide con el dominio del email"
  *       409:
- *         description: Conflicto, el nombre de usuario o el correo ya están en uso.
+ *         description: Conflicto por duplicado en la base de datos (username o email). El servicio detecta restricciones únicas (Prisma P2002) y devuelve mensajes específicos.
  *         content:
  *           application/json:
  *             schema:
