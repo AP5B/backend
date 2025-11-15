@@ -46,7 +46,8 @@
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "transbank-sdk": "^6.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
