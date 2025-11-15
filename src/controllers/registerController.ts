@@ -22,11 +22,11 @@ const validateRegisterBody = (body: registerRequestBody) => {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
   // Normalizaciones básicas
-  const username = body.username?.trim();
-  const firstName = body.first_name?.trim();
-  const firstLastName = body.last_name_1?.trim();
-  const secondLastName = body.last_name_2?.trim();
-  const email = body.email?.trim();
+  const username = body.username;
+  const firstName = body.first_name;
+  const firstLastName = body.last_name_1;
+  const secondLastName = body.last_name_2;
+  const email = body.email;
   const password = body.password;
 
   // Username
@@ -46,7 +46,10 @@ const validateRegisterBody = (body: registerRequestBody) => {
   if (firstName.length < 3 || firstName.length > 30)
     throw new HttpError(400, "El nombre debe tener entre 3 y 30 caracteres");
   if (!nameRegex.test(firstName))
-    throw new HttpError(400, "El nombre contiene caracteres inválidos");
+    throw new HttpError(
+      400,
+      "El nombre solo puede contener letras, espacios, apóstrofes y guiones",
+    );
 
   // Primer apellido
   if (!firstLastName)
