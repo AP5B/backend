@@ -67,6 +67,7 @@ model ClassRequest {
   id            Int                @id @default(autoincrement())
   classOfferId  Int
   classOffer    ClassOffer         @relation(fields: [classOfferId], references: [id], onDelete: Cascade)
+  transaction   Transaction[]
   userId        Int
   user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   state         ClassRequestState  @default(Pending)
@@ -74,12 +75,14 @@ model ClassRequest {
 }
 
 model Transaction {
-  id             Int        @id @default(autoincrement())
-  token          String
-  payment_date   DateTime   @db.Timestamp()
-  payment_method String?
-  amount         Int
-  createdAt      DateTime   @default(now()) @db.Timestamp(0)
+  id              Int         @id @default(autoincrement())
+  token           String
+  payment_date    DateTime    @db.Timestamp()
+  payment_method  String?
+  amount          Int
+  classRequestId  Int
+  classRequest    ClassRequest @relation(fields: [classRequestId], references: [id], onDelete: Cascade)
+  createdAt       DateTime     @default(now()) @db.Timestamp(0)
 }
 
 model Review {
