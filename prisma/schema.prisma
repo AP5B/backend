@@ -71,6 +71,8 @@ model ClassRequest {
   user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   state         ClassRequestState  @default(Pending)
   createdAt     DateTime           @default(now())
+  day           Int
+  slot          Int
 }
 
 model Transaction {

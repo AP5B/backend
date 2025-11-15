@@ -44,7 +44,7 @@ const sanitizeUploadAvailabilities = (
 const validateAvailability = (av: Omit<Availability, "id">) => {
   if (!av?.slot) throw new HttpError(400, "slot es requerido.");
   if (!Number.isInteger(av.slot))
-    throw new HttpError(400, `slot debe ser un numbero.`);
+    throw new HttpError(400, `slot debe ser un número.`);
   if (av.slot < 0 || av.slot > 24)
     throw new HttpError(400, `slot fuera de rango (0 - 24).`);
   if (!av?.day) throw new HttpError(400, "day es requerido.");
