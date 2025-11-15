@@ -14,7 +14,7 @@
     "lint": "eslint 'src/**/*.ts'",
     "db:deploy": "npx prisma migrate deploy && npx prisma generate",
     "prepare": "if [ \"$NODE_ENV\" = \"development\" ]; then husky install; fi",
-    "test": "jest --runInBand",
+    "test": "jest --runInBand --coverage",
     "test:only": "jest -- runInBand"
   },
   "lint-staged": {

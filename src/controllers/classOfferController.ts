@@ -73,20 +73,10 @@ export const getClassOffersController = async (req: Request, res: Response) => {
 
   console.log(query);
 
-  const [classOffers, totalItems, totalPages] = await getClassOffersService(
-    normPage,
-    normLimit,
-    query,
-  );
+  const classOffers = await getClassOffersService(normPage, normLimit, query);
 
   res.status(200).json({
     data: classOffers,
-    pagination: {
-      page: normPage,
-      limit: normLimit,
-      totalItems: totalItems,
-      totalPages: totalPages,
-    },
   });
 };
 
@@ -95,13 +85,22 @@ export const getClassOfferByIdController = async (
   res: Response,
 ) => {
   const classId = Number(req.params.classId);
+  const page = parseInt(req.query.reviewsPage as string) || 1;
+  const limit = parseInt(req.query.reviewsLimit as string) || 5;
+  const normPage = page > 0 ? page : 1;
+  const normLimit = limit > 0 ? limit : 5;
+
   if (isNaN(classId))
     throw new HttpError(
       400,
       "La id, de la oferta de clase, debe ser un número.",
     );
 
-  const classOffer = await getClassOfferByIdService(classId);
+  const classOffer = await getClassOfferByIdService(
+    classId,
+    normPage,
+    normLimit,
+  );
 
   res.status(200).json(classOffer);
 };
@@ -195,8 +194,6 @@ export const getMyClassOffersController = async (
   );
 
   res.status(200).json({
-    authorId: userId,
-    total: classOffers.length,
     data: classOffers,
   });
 };

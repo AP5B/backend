@@ -81,34 +81,127 @@ export const getClassOffersService = async (
       skip: (page - 1) * limit,
       take: limit,
       where: filter,
+      select: {
+        id: true,
+        title: true,
+        category: true,
+        description: true,
+        price: true,
+        createdAt: true,
+        author: {
+          select: {
+            id: true,
+            first_name: true,
+            last_name_1: true,
+            username: true,
+            receivedReviews: {
+              select: { rating: true },
+            },
+          },
+        },
+      },
     });
 
-    const totalItems = await prisma.classOffer.count({ where: filter });
+    const final = result.map((offer) => {
+      const ratings = offer.author.receivedReviews.map((r) => r.rating);
+      const avg =
+        ratings.length > 0
+          ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+          : 0;
+      const avgCeil = avg !== 0 ? Math.ceil(avg) : 0;
+      const formattedDate = new Date(offer.createdAt)
+        .toISOString()
+        .split("T")[0];
+      const { receivedReviews: _ignore, ...classOfferAuthor } = offer.author;
+      return {
+        ...offer,
+        createdAt: formattedDate,
+        author: {
+          avgRating: avgCeil,
+          ...classOfferAuthor,
+        },
+      };
+    });
 
-    const totalPages = Math.ceil(totalItems / limit);
-
-    return [result, totalItems, totalPages];
+    return final;
   } catch (error) {
     console.log(error);
     throw new HttpError(500, "Error interno del servidor");
   }
 };
 
-export const getClassOfferByIdService = async (classId: number) => {
+export const getClassOfferByIdService = async (
+  classId: number,
+  reviewsPage: number,
+  reviewsLimit: number,
+) => {
   try {
+    const offset = (reviewsPage - 1) * reviewsLimit;
     const classOffer = await prisma.classOffer.findUnique({
       where: {
         id: classId,
       },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        price: true,
+        createdAt: true,
+        category: true,
+        author: {
+          select: {
+            id: true,
+            username: true,
+            first_name: true,
+            last_name_1: true,
+            availabilities: { select: { day: true, slot: true } },
+            receivedReviews: {
+              skip: offset,
+              take: reviewsLimit,
+              select: {
+                id: true,
+                rating: true,
+                content: true,
+                createdAt: true,
+                reviewer: { select: { username: true } },
+              },
+            },
+          },
+        },
+      },
     });
 
-    if (!classOffer)
+    if (!classOffer) {
       throw new HttpError(
         404,
         `No existe una oferta de clase con id ${classId}`,
       );
+    }
 
-    return classOffer;
+    const formattedReviews = classOffer.author.receivedReviews.map((review) => {
+      const formattedCreatedAt = new Date(review.createdAt)
+        .toISOString()
+        .split("T")[0];
+      return {
+        ...review,
+        createdAt: formattedCreatedAt,
+      };
+    });
+
+    const authorInfo = {
+      ...classOffer.author,
+      receivedReviews: formattedReviews,
+    };
+
+    const formattedDate = new Date(classOffer.createdAt)
+      .toISOString()
+      .split("T")[0];
+
+    return {
+      ...classOffer,
+      createdAt: formattedDate,
+      author: authorInfo,
+    };
   } catch (error) {
     if (error instanceof HttpError) throw error;
     throw new HttpError(500, "Error interno del servidor");
@@ -221,9 +314,49 @@ export const getMyClassOffersService = async (
       },
       skip: offset,
       take: limit,
+      select: {
+        id: true,
+        title: true,
+        category: true,
+        description: true,
+        price: true,
+        createdAt: true,
+        author: {
+          select: {
+            id: true,
+            first_name: true,
+            last_name_1: true,
+            username: true,
+            receivedReviews: {
+              select: { rating: true },
+            },
+          },
+        },
+      },
     });
 
-    return classOffers;
+    const final = classOffers.map((offer) => {
+      const ratings = offer.author.receivedReviews.map((r) => r.rating);
+      const avg =
+        ratings.length > 0
+          ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+          : 0;
+      const avgCeil = avg !== 0 ? Math.ceil(avg) : 0;
+      const formattedDate = new Date(offer.createdAt)
+        .toISOString()
+        .split("T")[0];
+      const { receivedReviews: _ignore, ...classOfferAuthor } = offer.author;
+      return {
+        ...offer,
+        createdAt: formattedDate,
+        author: {
+          avgRating: avgCeil,
+          ...classOfferAuthor,
+        },
+      };
+    });
+
+    return final;
   } catch (error) {
     console.log(error);
     throw new HttpError(500, "Error interno del servidor.");
