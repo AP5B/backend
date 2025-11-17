@@ -70,7 +70,12 @@ router.get("/user", authenticate, getCurrentUserReviewsController);
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-10-31T21:27:40.000Z
+ *                         example: 2025-10-31
+ *                       reviewer:
+ *                         type: object
+ *                         properties:
+ *                           username:
+ *                             type: string
  *       401:
  *         description: No autorizado. El token JWT es inválido o no fue proporcionado.
  *         content:
@@ -158,7 +163,12 @@ router.post("/:teacherId", authenticate, createReviewController);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: "2025-10-31T21:27:40.000Z"
+ *                       example: "2025-10-31"
+ *                     reviewer:
+ *                       type: object
+ *                       properties:
+ *                         username:
+ *                           type: string
  *       400:
  *         description: Id del tutor no fue proporcionado correctamente, el usuario ya dejó una reseña para este tutor o la puntuación no está entre 1 y 5.
  *         content:
@@ -267,7 +277,12 @@ router.get("/:teacherId", getTeacherReviewsController);
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: "2025-10-31T21:27:40.000Z"
+ *                         example: "2025-10-31"
+ *                       reviewer:
+ *                         type: object
+ *                         properties:
+ *                           username:
+ *                             type: string
  *       400:
  *         description: Faltan parámetros o el ID del tutor no fue proporcionado correctamente.
  *         content:
@@ -478,6 +493,5 @@ router.delete("/:reviewId", authenticate, deleteReviewController);
  *                   type: string
  *                   example: Error interno del servidor.
  */
-router.delete("/:reviewId", authenticate, deleteReviewController);
 
 export default router;

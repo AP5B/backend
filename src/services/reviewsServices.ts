@@ -44,9 +44,14 @@ export const createReviewService = async (
         teacherId: teacherId,
         reviewerId: reviewerId,
       },
+      include: {
+        reviewer: { select: { username: true } },
+      },
     });
 
-    return newReview;
+    const formattedCreatedAt = newReview.createdAt.toISOString().split("T")[0];
+
+    return { ...newReview, createdAt: formattedCreatedAt };
   } catch (error) {
     if (error instanceof HttpError) {
       throw error;
@@ -75,11 +80,18 @@ export const getTeacherReviewsService = async (
       where: {
         teacherId: teacherId,
       },
+      include: {
+        reviewer: { select: { username: true } },
+      },
       skip: offset,
       take: limit,
     });
 
-    return reviews;
+    const formatedReviews = reviews.map((rev) => {
+      return { ...rev, createdAt: rev.createdAt.toISOString().split("T")[0] };
+    });
+
+    return formatedReviews;
   } catch (error) {
     if (error instanceof HttpError) {
       throw error;
@@ -110,9 +122,16 @@ export const updateReviewService = async (
     const editedReview = await prisma.review.update({
       where: { id: reviewId },
       data: editBody,
+      include: {
+        reviewer: { select: { username: true } },
+      },
     });
 
-    return editedReview;
+    const formattedCreatedAt = editedReview.createdAt
+      .toISOString()
+      .split("T")[0];
+
+    return { ...editedReview, createdAt: formattedCreatedAt };
   } catch (error) {
     if (error instanceof HttpError) {
       throw error;
@@ -156,9 +175,16 @@ export const getCurrentUserReviewsService = async (
       where: { reviewerId: userId },
       skip: offset,
       take: limit,
+      include: {
+        reviewer: { select: { username: true } },
+      },
     });
 
-    return myReviews;
+    const formatedReviews = myReviews.map((rev) => {
+      return { ...rev, createdAt: rev.createdAt.toISOString().split("T")[0] };
+    });
+
+    return formatedReviews;
   } catch (error) {
     console.log(error);
     throw new HttpError(500, "Error interno del servidor");
