@@ -379,6 +379,8 @@ router.get(
  *                 author:
  *                   type: object
  *                   properties:
+ *                     avgRating:
+ *                       type: number
  *                     id:
  *                       type: number
  *                     username:

@@ -380,7 +380,12 @@ router.patch("/:reviewId", authenticate, updateReviewController);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: "2025-10-31T21:27:40.000Z"
+ *                       example: "2025-10-31"
+ *                     reviewer:
+ *                       type: object
+ *                       properties:
+ *                         username:
+ *                           type: string
  *       400:
  *         description: Solicitud inválida (falta el ID de la review o los datos a actualizar no son válidos).
  *         content:
