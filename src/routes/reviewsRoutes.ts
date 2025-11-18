@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "../middlewares/authMiddleware";
+import { authenticate, autorize } from "../middlewares/authMiddleware";
 import {
   createReviewController,
   getTeacherReviewsController,
@@ -98,7 +98,12 @@ router.get("/user", authenticate, getCurrentUserReviewsController);
  *                   example: Error interno del servidor
  */
 
-router.post("/:teacherId", authenticate, createReviewController);
+router.post(
+  "/:teacherId",
+  authenticate,
+  autorize("Student"),
+  createReviewController,
+);
 /**
  * @swagger
  * /reviews/{teacherId}:
@@ -315,7 +320,12 @@ router.get("/:teacherId", getTeacherReviewsController);
  *                   example: Error interno del servidor.
  */
 
-router.patch("/:reviewId", authenticate, updateReviewController);
+router.patch(
+  "/:reviewId",
+  authenticate,
+  autorize("Student"),
+  updateReviewController,
+);
 /**
  * @swagger
  * /reviews/{reviewId}:
