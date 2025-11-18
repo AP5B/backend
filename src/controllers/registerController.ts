@@ -19,7 +19,6 @@ const validateRegisterBody = (body: registerRequestBody) => {
   const secondLastName = body.last_name_2;
   const email = body.email;
   const password = body.password;
-  const role = body.role;
 
   // Username
   if (!username)
@@ -79,21 +78,20 @@ const validateRegisterBody = (body: registerRequestBody) => {
     throw new HttpError(400, "El email no puede tener más de 60 caracteres.");
   if (!emailRegex.test(email))
     throw new HttpError(400, "El email no tiene un formato válido.");
-  if (role === "Teacher") {
-    const domain = email.split("@")[1] as string;
-    if (!["uc.cl", "estudiante.uc.cl"].includes(domain)) {
-      throw new HttpError(
-        400,
-        "Para registrarte como profesor tu correo debe terminar en @uc.cl o @estudiante.uc.cl.",
-      );
-    }
+
+  const domain = email.split("@")[1] as string;
+  if (!["uc.cl", "estudiante.uc.cl"].includes(domain)) {
+    throw new HttpError(
+      400,
+      "Para registrarte tu correo debe terminar en @uc.cl o @estudiante.uc.cl.",
+    );
   }
 
   // Password
   if (!password)
     throw new HttpError(400, "La contraseña no puede estar vacía.");
-  if (password.trim().length < 8)
-    throw new HttpError(400, "La contraseña debe tener al menos 8 caracteres");
+  if (password.trim().length < 5)
+    throw new HttpError(400, "La contraseña debe tener al menos 5 caracteres");
   if (password !== body.confirm_password)
     throw new HttpError(400, "Las contraseñas no coinciden.");
 };
