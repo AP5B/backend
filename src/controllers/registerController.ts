@@ -8,14 +8,6 @@ import {
 } from "../services/registerService";
 import { generateTokens, setAuthCookies } from "../utils/setAuthCookies";
 
-const roleByDomain = (email: string): UserRole => {
-  const domain = email.split("@")[1] as string;
-  if (["uc.cl", "estudiante.uc.cl"].includes(domain)) {
-    return "Teacher";
-  }
-  return "Student";
-};
-
 const validateRegisterBody = (body: registerRequestBody) => {
   const usernameRegex = /^[a-z0-9_]+$/;
   const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
@@ -28,77 +20,88 @@ const validateRegisterBody = (body: registerRequestBody) => {
   const secondLastName = body.last_name_2;
   const email = body.email;
   const password = body.password;
+  const role = body.role;
 
   // Username
   if (!username)
-    throw new HttpError(400, "El username no puede estar vacío");
+    throw new HttpError(400, "El nombre de usuario no puede estar vacío.");
   if (username.length < 5 || username.length > 20)
-    throw new HttpError(400, "El username debe tener entre 5 y 20 caracteres");
+    throw new HttpError(400, "El nombre de usuario debe tener entre 5 y 20 caracteres.");
   if (!usernameRegex.test(username))
     throw new HttpError(
       400,
-      "El username solo puede contener minúsculas, números y guiones bajos",
+      "El nombre de usuario solo puede contener minúsculas, números y guiones bajos.",
     );
 
   // Nombre
   if (!firstName)
-    throw new HttpError(400, "El nombre no puede estar vacío");
+    throw new HttpError(400, "El nombre no puede estar vacío.");
   if (firstName.length < 3 || firstName.length > 30)
     throw new HttpError(400, "El nombre debe tener entre 3 y 30 caracteres");
   if (!nameRegex.test(firstName))
     throw new HttpError(
       400,
-      "El nombre solo puede contener letras, espacios, apóstrofes y guiones",
+      "El nombre solo puede contener letras, espacios, apóstrofes y guiones.",
     );
 
   // Primer apellido
   if (!firstLastName)
-    throw new HttpError(400, "El primer apellido no puede estar vacío");
+    throw new HttpError(400, "El primer apellido no puede estar vacío.");
   if (firstLastName.length < 3 || firstLastName.length > 30)
     throw new HttpError(
       400,
-      "El primer apellido debe tener entre 3 y 30 caracteres",
+      "El primer apellido debe tener entre 3 y 30 caracteres.",
     );
   if (!nameRegex.test(firstLastName))
     throw new HttpError(
       400,
-      "El primer apellido contiene caracteres inválidos",
+      "El primer apellido solo puede contener letras, espacios, apóstrofes y guiones.",
     );
 
   // Segundo apellido (opcional)
-  if (body.last_name_2) {
-    if (!secondLastName)
-      throw new HttpError(400, "El segundo apellido no puede estar vacío");
+  if (secondLastName) {
     if (secondLastName.length < 3 || secondLastName.length > 30)
       throw new HttpError(
         400,
-        "El segundo apellido debe tener entre 3 y 30 caracteres",
+        "El segundo apellido debe tener entre 3 y 30 caracteres.",
       );
     if (!nameRegex.test(secondLastName))
       throw new HttpError(
         400,
-        "El segundo apellido contiene caracteres inválidos",
+        "El segundo apellido solo puede contener letras, espacios, apóstrofes y guiones.",
       );
   }
 
   // Email
   if (!email)
-    throw new HttpError(400, "El email no puede estar vacío");
+    throw new HttpError(400, "El email no puede estar vacío.");
   if (email.length > 60)
-    throw new HttpError(400, "El email no puede tener más de 60 caracteres");
+    throw new HttpError(400, "El email no puede tener más de 60 caracteres.");
   if (!emailRegex.test(email))
-    throw new HttpError(400, "El email no tiene un formato válido");
+    throw new HttpError(400, "El email no tiene un formato válido.");
+  if (role === "Teacher") {
+    const domain = email.split("@")[1] as string;
+    if (!["uc.cl", "estudiante.uc.cl"].includes(domain)) {
+      throw new HttpError(
+        400,
+        "Para registrarte como profesor tu correo debe terminar en @uc.cl o @estudiante.uc.cl.",
+      );
+    }
+  }
+
+  if (!role)
+    throw new HttpError(400, "El rol no puede estar vacío.");
 
   // Password
   if (!password)
-    throw new HttpError(400, "La contraseña no puede estar vacía");
+    throw new HttpError(400, "La contraseña no puede estar vacía.");
   if (password.trim().length < 8)
     throw new HttpError(
       400,
       "La contraseña debe tener al menos 8 caracteres",
     );
   if (password !== body.confirm_password)
-    throw new HttpError(400, "Las contraseñas no coinciden");
+    throw new HttpError(400, "Las contraseñas no coinciden.");
 };
 
 export const registerUserController = async (req: Request, res: Response) => {
@@ -107,7 +110,7 @@ export const registerUserController = async (req: Request, res: Response) => {
   validateRegisterBody(reqBody);
 
   const norm_email = reqBody.email.trim().toLowerCase();
-  const role: UserRole = roleByDomain(norm_email);
+  const role: UserRole = reqBody.role;
 
   const { confirm_password: _ignore, ...rest } = reqBody;
   const registBody = { ...rest, email: norm_email, role };

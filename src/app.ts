@@ -7,6 +7,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
 import registerRoutes from "./routes/registerRoutes";
 import loginRoutes from "./routes/loginRoutes";
+import profileRoutes from "./routes/profileRoutes";
 import classRoutes from "./routes/classOfferRoutes";
 import availabilityRoutes from "./routes/availabilityRoutes";
 import cookieParser from "cookie-parser";
@@ -58,6 +59,7 @@ export const createApp = () => {
   app.use("/", loginRoutes);
   app.use("/class-offer/", classRoutes);
   app.use("/availability/", availabilityRoutes);
+  app.use("/profile/", profileRoutes);
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // Swagger
   app.use("/reviews/", reviewsRoutes);
 
