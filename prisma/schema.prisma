@@ -42,7 +42,7 @@ model User {
   last_name_2     String?         @db.VarChar(30)
   email           String          @unique @db.VarChar(60)
   password        String          @db.VarChar(255)
-  role            UserRole        
+  role            UserRole        @default(Student)
   phone           String?         @db.VarChar(8)
   isDeleted       Boolean         @default(false)
   classOffers     ClassOffer[]

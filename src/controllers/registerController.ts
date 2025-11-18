@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { UserRole } from "@prisma/client";
 import { HttpError } from "../middlewares/errorHandler";
 import {
   registerRequestBody,
@@ -26,7 +25,10 @@ const validateRegisterBody = (body: registerRequestBody) => {
   if (!username)
     throw new HttpError(400, "El nombre de usuario no puede estar vacío.");
   if (username.length < 5 || username.length > 20)
-    throw new HttpError(400, "El nombre de usuario debe tener entre 5 y 20 caracteres.");
+    throw new HttpError(
+      400,
+      "El nombre de usuario debe tener entre 5 y 20 caracteres.",
+    );
   if (!usernameRegex.test(username))
     throw new HttpError(
       400,
@@ -34,8 +36,7 @@ const validateRegisterBody = (body: registerRequestBody) => {
     );
 
   // Nombre
-  if (!firstName)
-    throw new HttpError(400, "El nombre no puede estar vacío.");
+  if (!firstName) throw new HttpError(400, "El nombre no puede estar vacío.");
   if (firstName.length < 3 || firstName.length > 30)
     throw new HttpError(400, "El nombre debe tener entre 3 y 30 caracteres");
   if (!nameRegex.test(firstName))
@@ -73,8 +74,7 @@ const validateRegisterBody = (body: registerRequestBody) => {
   }
 
   // Email
-  if (!email)
-    throw new HttpError(400, "El email no puede estar vacío.");
+  if (!email) throw new HttpError(400, "El email no puede estar vacío.");
   if (email.length > 60)
     throw new HttpError(400, "El email no puede tener más de 60 caracteres.");
   if (!emailRegex.test(email))
@@ -89,17 +89,11 @@ const validateRegisterBody = (body: registerRequestBody) => {
     }
   }
 
-  if (!role)
-    throw new HttpError(400, "El rol no puede estar vacío.");
-
   // Password
   if (!password)
     throw new HttpError(400, "La contraseña no puede estar vacía.");
   if (password.trim().length < 8)
-    throw new HttpError(
-      400,
-      "La contraseña debe tener al menos 8 caracteres",
-    );
+    throw new HttpError(400, "La contraseña debe tener al menos 8 caracteres");
   if (password !== body.confirm_password)
     throw new HttpError(400, "Las contraseñas no coinciden.");
 };
@@ -110,10 +104,9 @@ export const registerUserController = async (req: Request, res: Response) => {
   validateRegisterBody(reqBody);
 
   const norm_email = reqBody.email.trim().toLowerCase();
-  const role: UserRole = reqBody.role;
 
   const { confirm_password: _ignore, ...rest } = reqBody;
-  const registBody = { ...rest, email: norm_email, role };
+  const registBody = { ...rest, email: norm_email };
 
   const newUser = await registerUserService(registBody);
 
@@ -126,13 +119,14 @@ export const registerUserController = async (req: Request, res: Response) => {
 
   setAuthCookies(res, token, refreshToken);
 
-  const { password:_password, ...userWithoutPassword } = newUser;
+  const { password: _password, ...userWithoutPassword } = newUser;
 
   return res.status(201).json({
     user: userWithoutPassword,
     token,
     refreshToken,
-    message: "Usuario tipo " + role + " registrado correctamente",
+    message:
+      "Usuario tipo " + userWithoutPassword.role + " registrado correctamente",
   });
 };
 

@@ -15,7 +15,7 @@ export interface registerRequestBody {
   last_name_2?: string;
   email: string;
   password: string;
-  role: UserRole;
+  role?: UserRole;
   confirm_password: string;
 }
 
