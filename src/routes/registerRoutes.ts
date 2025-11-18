@@ -21,7 +21,7 @@ router.post("/register", registerUserController);
  *         - `username`: solo minúsculas, números y guiones bajos; 5-20 caracteres.
  *         - `first_name`, `last_name_1`, `last_name_2`: letras (incluye acentos), espacios y '-; 3-30 caracteres.
  *         - `email`: formato válido y máximo 60 caracteres.
- *         - `password`: mínimo 8 caracteres; `confirm_password` debe coincidir.
+ *         - `password`: mínimo 5 caracteres; `confirm_password` debe coincidir.
  *     tags:
  *       - Auth
  *     requestBody:
