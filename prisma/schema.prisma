@@ -34,21 +34,32 @@ enum ClassRequestState {
 }
 
 model User {
-  id              Int             @id @default(autoincrement())
-  username        String          @unique
-  first_name      String?
-  last_name_1     String?
-  last_name_2     String?
-  email           String          @unique
-  password        String
-  role            UserRole        @default(Student)
-  phone           String?
-  isDeleted       Boolean         @default(false)
-  classOffers     ClassOffer[]
-  classRequests   ClassRequest[]
-  availabilities  Availability[] 
-  writtenReviews  Review[]        @relation("Reviewer")
-  receivedReviews Review[]        @relation("Teacher")
+  id               Int              @id @default(autoincrement())
+  username         String           @unique
+  first_name       String?
+  last_name_1      String?
+  last_name_2      String?
+  email            String           @unique
+  password         String
+  role             UserRole         @default(Student)
+  phone            String?
+  isDeleted        Boolean          @default(false)
+  classOffers      ClassOffer[]
+  classRequests    ClassRequest[]
+  availabilities   Availability[] 
+  writtenReviews   Review[]         @relation("Reviewer")
+  receivedReviews  Review[]         @relation("Teacher")
+  mercadopagoInfo  MercadopagoInfo? 
+}
+
+model MercadopagoInfo {
+  id                       Int     @id @default(autoincrement())
+  userId                   Int     @unique
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken              String
+  accessTokenExpiration    DateTime
+  refreshToken             String
+  refreshTokenExpiration   DateTime
 }
 
 model ClassOffer {
@@ -73,15 +84,17 @@ model ClassRequest {
   createdAt     DateTime           @default(now())
   day           Int
   slot          Int
+  transactions  Transaction[]
 }
 
 model Transaction {
-  id             Int        @id @default(autoincrement())
-  token          String
-  payment_date   DateTime   @db.Timestamp()
-  payment_method String?
-  amount         Int
-  createdAt      DateTime   @default(now()) @db.Timestamp(0)
+  id             Int           @id @default(autoincrement())
+  preferenceId   String
+  paymentId      String?
+  status         String        @default("pending")
+  classRequestId Int
+  classRequest   ClassRequest  @relation(fields: [classRequestId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now()) @db.Timestamp(0)
 }
 
 model Review {

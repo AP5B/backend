@@ -15,6 +15,7 @@ import {
   editClassOfferRequestBody,
   categories,
 } from "../services/classOfferServices";
+import { checkOAuthService } from "../services/transactionService";
 
 const validateClassOfferBody = (body: classOfferRequestBody) => {
   if (!body.title?.trim())
@@ -111,6 +112,15 @@ export const createClassOfferController = async (
 ) => {
   const userId: number = res.locals.user.id;
   const reqBody = req.body as classOfferRequestBody;
+
+  const haveOauth = await checkOAuthService(userId);
+
+  if (haveOauth === false) {
+    throw new HttpError(
+      403,
+      "El usuario no ha completado el proceso de OAuth de Mercado Pago.",
+    );
+  }
 
   validateClassOfferBody(reqBody);
 

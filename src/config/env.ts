@@ -8,6 +8,10 @@ interface env {
   jwt_secret: string;
   allowedOrigins: string;
   database_url: string;
+  mp_access_token: string;
+  mp_client_id: string;
+  mp_client_secret: string;
+  mp_redirect_uri: string;
 }
 
 const env: env = {
@@ -16,6 +20,10 @@ const env: env = {
   jwt_secret: `${process.env.JWT_SECRET}`,
   allowedOrigins: `${process.env.ALLOWED_ORIGINS}`,
   database_url: `${process.env.DATABASE_URL}`,
+  mp_access_token: `${process.env.MP_ACCESS_TOKEN}`,
+  mp_client_id: `${process.env.MP_CLIENT_ID}`,
+  mp_client_secret: `${process.env.MP_CLIENT_SECRET}`,
+  mp_redirect_uri: `${process.env.MP_REDIRECT_URI}`,
 };
 
 export default env;
