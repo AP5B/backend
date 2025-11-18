@@ -90,6 +90,7 @@ export const getClassOffersService = async (
         createdAt: true,
         author: {
           select: {
+            id: true,
             first_name: true,
             last_name_1: true,
             username: true,
@@ -149,6 +150,7 @@ export const getClassOfferByIdService = async (
         category: true,
         author: {
           select: {
+            id: true,
             username: true,
             first_name: true,
             last_name_1: true,
@@ -186,7 +188,15 @@ export const getClassOfferByIdService = async (
       };
     });
 
+    const ratings = classOffer.author.receivedReviews.map((r) => r.rating);
+    const avg =
+      ratings.length > 0
+        ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+        : 0;
+    const avgCeil = avg !== 0 ? Math.ceil(avg) : 0;
+
     const authorInfo = {
+      avgRating: avgCeil,
       ...classOffer.author,
       receivedReviews: formattedReviews,
     };
@@ -321,6 +331,7 @@ export const getMyClassOffersService = async (
         createdAt: true,
         author: {
           select: {
+            id: true,
             first_name: true,
             last_name_1: true,
             username: true,

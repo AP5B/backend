@@ -176,6 +176,9 @@ router.get(
  *                           avgRating:
  *                             type: number
  *                             example: 3
+ *                           id:
+ *                             type: number
+ *                             example: 1
  *                           first_name:
  *                             type: string
  *                             example: "prueba"
@@ -282,6 +285,9 @@ router.get("/", getClassOffersController);
  *                           avgRating:
  *                             type: integer
  *                             example: 3
+ *                           id:
+ *                             type: integer
+ *                             example: 0
  *                           first_name:
  *                             type: string
  *                             example: "prueba"
@@ -373,6 +379,10 @@ router.get(
  *                 author:
  *                   type: object
  *                   properties:
+ *                     avgRating:
+ *                       type: number
+ *                     id:
+ *                       type: number
  *                     username:
  *                       type: string
  *                     first_name:
@@ -439,7 +449,6 @@ router.get(
  *                   type: string
  *                   example: Error interno del servidor
  */
-
 router.get("/:classId", getClassOfferByIdController);
 
 /**
