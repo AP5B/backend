@@ -188,7 +188,15 @@ export const getClassOfferByIdService = async (
       };
     });
 
+    const ratings = classOffer.author.receivedReviews.map((r) => r.rating);
+    const avg =
+      ratings.length > 0
+        ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+        : 0;
+    const avgCeil = avg !== 0 ? Math.ceil(avg) : 0;
+
     const authorInfo = {
+      avgRating: avgCeil,
       ...classOffer.author,
       receivedReviews: formattedReviews,
     };
