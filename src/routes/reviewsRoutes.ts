@@ -194,6 +194,16 @@ router.post(
  *                 message:
  *                   type: string
  *                   example: Autenticación fallida
+ *       403:
+ *         description: Cuenta del profesor eliminada.
+ *         content:
+ *           aplication/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La cuenta del profesor fue suspendida.
  *       404:
  *         description: Tutor no encontrado
  *         content:
@@ -298,6 +308,16 @@ router.get("/:teacherId", getTeacherReviewsController);
  *                 message:
  *                   type: string
  *                   example: Id del tutor faltante.
+ *       403:
+ *         description: Cuenta del profesor eliminada.
+ *         content:
+ *           aplication/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La cuenta del profesor fue suspendida.
  *       404:
  *         description: Tutor no encontrado.
  *         content:
