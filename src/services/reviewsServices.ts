@@ -19,6 +19,10 @@ export const createReviewService = async (
   reviewerId: number,
 ) => {
   try {
+    if (teacherId === reviewerId) {
+      throw new HttpError(403, "No puedes dejar una review sobre ti mismo.");
+    }
+
     const teacher = await prisma.user.findUnique({
       where: { id: teacherId, role: "Teacher" },
       select: { isDeleted: true },
@@ -30,6 +34,15 @@ export const createReviewService = async (
 
     if (teacher.isDeleted === true) {
       throw new HttpError(403, "La cuenta del profesor fue suspendida.");
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: reviewerId },
+      select: { isDeleted: true },
+    });
+
+    if (user && user.isDeleted === true) {
+      throw new HttpError(403, "Operación denegada, tu cuenta fue suspendida.");
     }
 
     const review = await prisma.review.findFirst({
@@ -138,6 +151,10 @@ export const updateReviewService = async (
 
     if (review.reviewerId !== userId) {
       throw new HttpError(401, `El recurso no le pertenece al usuario actual.`);
+    }
+
+    if (review.reviewer.isDeleted === true) {
+      throw new HttpError(403, "Operación denegada, tu cuenta fue suspendida.");
     }
 
     const editedReview = await prisma.review.update({

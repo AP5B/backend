@@ -179,6 +179,18 @@ router.get(
  *                 message:
  *                   type: string
  *                   example: "El campo 'slot' es requerido"
+ *       403:
+ *         description: |
+ *           La cuenta del usuario que realiza la solicitud fue eliminada o
+ *           el profesor intenta hacer una reserva en su propia clase.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Operación denegada, tu cuenta fue suspendida || No puedes hacer una reserva en tu propia clase"
  *       404:
  *         description: La clase especificada no existe
  *         content:
@@ -298,6 +310,9 @@ router.post(
  *                                 type: string
  *                                 nullable: true
  *                                 example: null
+ *                               isDeleted:
+ *                                 type: bool
+ *                                 example: false
  *       401:
  *         description: Usuario no autenticado o sin permisos
  *         content:
@@ -308,6 +323,16 @@ router.post(
  *                 message:
  *                   type: string
  *                   example: "Usuario no tiene rol Student"
+ *       403:
+ *         description: La cuenta del usuario que realiza la solicitud fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Operación denegada, tu cuenta fue suspendida"
  *       500:
  *         description: Error interno al obtener las reservas del usuario
  *         content:
@@ -397,6 +422,9 @@ router.get(
  *                             type: string
  *                             nullable: true
  *                             example: "Pérez"
+ *                           isDeleted:
+ *                             type: bool
+ *                             example: false
  *                       classOffer:
  *                         type: object
  *                         properties:
@@ -419,6 +447,16 @@ router.get(
  *                 message:
  *                   type: string
  *                   example: "Usuario no tiene rol Teacher"
+ *       403:
+ *         description: La cuenta del usuario que realiza la solicitud fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Operación denegada, tu cuenta fue suspendida"
  *       500:
  *         description: Error interno al obtener las solicitudes del tutor
  *         content:
@@ -493,6 +531,7 @@ router.get(
  *                         email: { type: string, example: email3@uc.cl }
  *                         first_name: { type: string, nullable: true, example: null }
  *                         last_name_1: { type: string, nullable: true, example: null }
+ *                         isDeleted: { type: bool, example: false }
  *                     classOffer:
  *                       type: object
  *                       properties:
@@ -523,7 +562,7 @@ router.get(
  *                   example: Usuario no autenticado
  *
  *       403:
- *         description: El usuario no es el tutor de la clase
+ *         description: El usuario que realiza la solicitud no es el tutor de la clase o su cuenta fue eliminada
  *         content:
  *           application/json:
  *             schema:
@@ -531,7 +570,7 @@ router.get(
  *               properties:
  *                 error:
  *                   type: string
- *                   example: No tienes permisos para modificar esta solicitud
+ *                   example: No tienes permisos para modificar esta solicitud || Operación denegada, tu cuenta fue suspendida
  *
  *       404:
  *         description: Solicitud de clase no encontrada
@@ -638,7 +677,7 @@ router.patch(
  *                   example: Usuario no autenticado
  *
  *       403:
- *         description: El usuario no es el tutor de esta clase
+ *         description: El usuario que realiza la solicitud no es el tutor de esta clase o su cuenta fue eliminada.
  *         content:
  *           application/json:
  *             schema:
@@ -646,7 +685,7 @@ router.patch(
  *               properties:
  *                 error:
  *                   type: string
- *                   example: No eres el tutor de esta clase
+ *                   example: No eres el tutor de esta clase || Operación denegada, tu cuenta fue suspendida
  *
  *       404:
  *         description: Clase no encontrada
