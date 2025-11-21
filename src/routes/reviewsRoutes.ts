@@ -76,6 +76,9 @@ router.get("/user", authenticate, getCurrentUserReviewsController);
  *                         properties:
  *                           username:
  *                             type: string
+ *                           isDeleted:
+ *                             type: bool
+ *                             example: false
  *       401:
  *         description: No autorizado. El token JWT es inválido o no fue proporcionado.
  *         content:
@@ -194,6 +197,17 @@ router.post(
  *                 message:
  *                   type: string
  *                   example: Autenticación fallida
+ *       403:
+ *         description: Cuenta del profesor eliminada, la cuenta del autor de la review fue eliminada o el usuario intenta dejar una review sobre si mismo.
+ *         content:
+ *           aplication/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La cuenta del profesor fue suspendida. || Operación denegada, tu cuenta fue suspendida || No puedes dejar una review sobre ti mismo.
+ *
  *       404:
  *         description: Tutor no encontrado
  *         content:
@@ -288,6 +302,9 @@ router.get("/:teacherId", getTeacherReviewsController);
  *                         properties:
  *                           username:
  *                             type: string
+ *                           isDeleted:
+ *                             type: bool
+ *                             example: false
  *       400:
  *         description: Faltan parámetros o el ID del tutor no fue proporcionado correctamente.
  *         content:
@@ -298,6 +315,16 @@ router.get("/:teacherId", getTeacherReviewsController);
  *                 message:
  *                   type: string
  *                   example: Id del tutor faltante.
+ *       403:
+ *         description: Cuenta del profesor eliminada.
+ *         content:
+ *           aplication/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La cuenta del profesor fue suspendida.
  *       404:
  *         description: Tutor no encontrado.
  *         content:
@@ -416,6 +443,16 @@ router.patch(
  *                 message:
  *                   type: string
  *                   example: El recurso no le pertenece al usuario actual.
+ *       403:
+ *         description: La cuenta del autor de la review fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Operación denegada, tu cuenta fue suspendida.
  *       404:
  *         description: Review no encontrada.
  *         content:

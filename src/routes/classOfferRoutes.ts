@@ -307,6 +307,16 @@ router.get("/", getClassOffersController);
  *                 message:
  *                   type: string
  *                   example: Usuario no tiene rol Teacher
+ *       403:
+ *         description: La cuenta de el usuario que realiza la petición fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Operación denegada, tu cuenta fue suspendida.
  *       500:
  *         description: Error interno del servidor.
  *         content:
@@ -389,6 +399,9 @@ router.get(
  *                       type: string
  *                     last_name_1:
  *                       type: string
+ *                     isDeleted:
+ *                       type: bool
+ *                       example: false
  *                     availabilities:
  *                       type: array
  *                       items:
@@ -418,6 +431,9 @@ router.get(
  *                             properties:
  *                               username:
  *                                 type: string
+ *                               isDeleted:
+ *                                 type: bool
+ *                                 example: false
  *       400:
  *         description: Error en los datos de entrada (ID inválida).
  *         content:
@@ -428,6 +444,16 @@ router.get(
  *                 message:
  *                   type: string
  *                   example: La id, de la oferta de clase, debe ser un número.
+ *       403:
+ *         description: La cuenta de el profesor dueño de la clase fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La cuenta del profesor fue suspendida.
  *       404:
  *         description: No se encontró la oferta de clase con el ID especificado.
  *         content:
@@ -508,6 +534,16 @@ router.get("/:classId", getClassOfferByIdController);
  *                 message:
  *                   type: string
  *                   example: Usuario no tiene rol Teacher
+ *       403:
+ *         description: La cuenta del usuario que intenta crear la clase fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Operación denegada, tu cuenta fue suspendida.
  *       500:
  *         description: Error interno del servidor
  *         content:
@@ -581,6 +617,16 @@ router.post("/", authenticate, autorize("Teacher"), createClassOfferController);
  *                 message:
  *                   type: string
  *                   example: El recurso no pertenece al usuario.
+ *       403:
+ *         description: La cuenta del usuario que intenta editar la clase fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Operación denegada, tu cuenta fue suspendida.
  *       404:
  *         description: No se encontro la clase con id `classId`
  *         content:
@@ -659,6 +705,16 @@ router.patch(
  *                 message:
  *                   type: string
  *                   example: El recurso no pertenece al usuario.
+ *       403:
+ *         description: La cuenta del usuario que intenta borrar la clase fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Operación denegada, tu cuenta fue suspendida.
  *       404:
  *         description: No se encontro la clase con id `classId`.
  *         content:
