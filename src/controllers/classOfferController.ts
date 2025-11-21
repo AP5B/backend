@@ -15,6 +15,7 @@ import {
   editClassOfferRequestBody,
   categories,
 } from "../services/classOfferServices";
+import { checkOAuthService } from "../services/transactionService";
 
 const validateClassOfferBody = (body: classOfferRequestBody) => {
   if (!body.title?.trim())
@@ -89,6 +90,8 @@ export const getClassOfferByIdController = async (
   const limit = parseInt(req.query.reviewsLimit as string) || 5;
   const normPage = page > 0 ? page : 1;
   const normLimit = limit > 0 ? limit : 5;
+  const userId = res.locals.user?.id || null;
+  console.log(userId);
 
   if (isNaN(classId))
     throw new HttpError(
@@ -100,6 +103,7 @@ export const getClassOfferByIdController = async (
     classId,
     normPage,
     normLimit,
+    userId,
   );
 
   res.status(200).json(classOffer);
@@ -111,6 +115,15 @@ export const createClassOfferController = async (
 ) => {
   const userId: number = res.locals.user.id;
   const reqBody = req.body as classOfferRequestBody;
+
+  const response = await checkOAuthService(userId);
+
+  if (response.hasOAuth === false) {
+    throw new HttpError(
+      403,
+      "El usuario no ha completado el proceso de OAuth de Mercado Pago.",
+    );
+  }
 
   validateClassOfferBody(reqBody);
 

@@ -1,3 +1,4 @@
+import { ClassRequestState } from "@prisma/client";
 import { HttpError } from "../middlewares/errorHandler";
 import PrismaManager from "../utils/prismaManager";
 
@@ -92,7 +93,6 @@ export const createClassRequestService = async (
       data: {
         classOfferId: body.classOfferId,
         userId: userId,
-        state: "Pending", // estado inicial
         day: body.day,
         slot: body.slot,
       },
@@ -381,6 +381,11 @@ export const getClassRequestsByClassService = async (
             price: true,
           },
         },
+        transactions: {
+          select: {
+            confirmCode: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
       skip: offset,
@@ -398,4 +403,54 @@ export const getClassRequestsByClassService = async (
     if (error instanceof HttpError) throw error;
     throw new HttpError(500, "Error al obtener las reservas de la clase");
   }
+};
+
+/**
+ * El profesor acepta una solicitud de clase, cambiando su estado a 'PaymentPending'
+ * Para esperar que el estudiante realice el pago.
+ */
+export const acceptClassService = async (classRequestId: number) => {
+  try {
+    const updatedClassRequest = await prisma.classRequest.update({
+      where: { id: classRequestId },
+      data: { state: ClassRequestState.PaymentPending },
+    });
+
+    return updatedClassRequest;
+  } catch (error) {
+    console.error(error);
+    throw new HttpError(500, "Error al aceptar la solicitud de clase");
+  }
+};
+
+/**
+ * Confirma la transaccion y la bloquea para evitar refunds
+ * @param code Codigo de confirmacion enviado al estudiante
+ */
+export const confirmClassService = async (
+  classRequestId: number,
+  code: string,
+) => {
+  const transaction = await prisma.transaction.findMany({
+    where: { classRequestId: classRequestId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!transaction[0])
+    throw new HttpError(
+      404,
+      `No se encontro transaccion para la class request con id ${classRequestId}`,
+    );
+
+  if (transaction[0].confirmCode !== code)
+    throw new HttpError(400, "Codigo de confirmacion invalido");
+
+  const updatedClassRequest = await prisma.classRequest.update({
+    where: { id: classRequestId },
+    data: {
+      state: ClassRequestState.Approved,
+    },
+  });
+
+  return updatedClassRequest;
 };

@@ -13,7 +13,7 @@ import cookieParser from "cookie-parser";
 import env from "./config/env";
 import reviewsRoutes from "./routes/reviewsRoutes";
 import classRequestRoutes from "./routes/classRequestRoutes";
-
+import transactionRoutes from "./routes/transactionRoutes";
 
 // Swagger setup
 const options = {
@@ -36,7 +36,7 @@ export const createApp = () => {
 
   app.use(
     cors({
-      origin: function(origin, callback) {
+      origin: function (origin, callback) {
         if (!origin) return callback(null, true);
 
         if (allowedOrigins.indexOf(origin) === -1) {
@@ -63,6 +63,7 @@ export const createApp = () => {
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // Swagger
   app.use("/reviews/", reviewsRoutes);
   app.use("/class-requests/", classRequestRoutes);
+  app.use("/transactions/", transactionRoutes);
 
   app.use(errorHandler);
   return app;
