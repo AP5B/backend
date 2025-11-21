@@ -10,11 +10,15 @@
 
 */
 -- AlterTable
+ALTER TABLE "ClassRequest" ALTER COLUMN "state" SET DEFAULT 'Created';
+
+-- AlterTable
 ALTER TABLE "Transaction" DROP COLUMN "amount",
 DROP COLUMN "payment_date",
 DROP COLUMN "payment_method",
 DROP COLUMN "token",
 ADD COLUMN     "classRequestId" INTEGER NOT NULL,
+ADD COLUMN     "confirmCode" TEXT,
 ADD COLUMN     "paymentId" TEXT,
 ADD COLUMN     "preferenceId" TEXT NOT NULL,
 ADD COLUMN     "status" TEXT NOT NULL DEFAULT 'pending';

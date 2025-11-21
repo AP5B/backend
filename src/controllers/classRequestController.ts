@@ -7,6 +7,8 @@ import {
   getTutorClassRequestsService,
   updateClassRequestStateService,
   getClassRequestsByClassService,
+  acceptClassService,
+  confirmClassService,
 } from "../services/classRequestService";
 
 /**
@@ -170,5 +172,38 @@ export const getClassRequestsByClassController = async (
 
   return res.status(200).json({
     data,
+  });
+};
+
+export const confirmClassRequestController = async (
+  req: Request,
+  res: Response,
+) => {
+  const classRequestId = parseInt(req.params.classRequestId as string);
+  const code = req.query.code as string;
+
+  if (Number.isNaN(classRequestId))
+    throw new HttpError(400, "classRequestId debe ser un numero");
+
+  await confirmClassService(classRequestId, code);
+
+  res.status(200).json({
+    message: "Clase confirmada exitosamente",
+  });
+};
+
+export const acceptClassRequestController = async (
+  req: Request,
+  res: Response,
+) => {
+  const classRequestId = parseInt(req.params.classRequestId as string);
+
+  if (Number.isNaN(classRequestId))
+    throw new HttpError(400, "classRequestId debe ser un numero");
+
+  await acceptClassService(classRequestId);
+
+  res.status(200).json({
+    message: "Solicitud de clase aceptada exitosamente",
   });
 };

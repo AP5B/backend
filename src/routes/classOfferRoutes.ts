@@ -7,7 +7,11 @@ import {
   deleteClassOfferController,
   getMyClassOffersController,
 } from "../controllers/classOfferController";
-import { authenticate, autorize } from "../middlewares/authMiddleware";
+import {
+  authenticate,
+  autorize,
+  optionalAuthenticate,
+} from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -447,7 +451,7 @@ router.get(
  *                   type: string
  *                   example: Error interno del servidor
  */
-router.get("/:classId", getClassOfferByIdController);
+router.get("/:classId", optionalAuthenticate, getClassOfferByIdController);
 
 /**
  * @swagger

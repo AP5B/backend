@@ -1,7 +1,12 @@
 import env from "../config/env";
-import { User } from "@prisma/client";
+import { ClassRequestState, User } from "@prisma/client";
 import PrismaManager from "../utils/prismaManager";
-import { MercadoPagoConfig, Preference, OAuth } from "mercadopago";
+import {
+  MercadoPagoConfig,
+  Preference,
+  OAuth,
+  PaymentRefund,
+} from "mercadopago";
 import { HttpError } from "../middlewares/errorHandler";
 
 const client = new MercadoPagoConfig({
@@ -10,9 +15,20 @@ const client = new MercadoPagoConfig({
 });
 const preference = new Preference(client);
 const oauth = new OAuth(client);
+const paymetRefund = new PaymentRefund(client);
 
 const prisma = PrismaManager.GetClient();
 
+export interface RedirectPayload {
+  payment_id: string;
+  status: string;
+  external_reference: string;
+  merchant_order_id: string;
+}
+
+/**
+ * crea una preferencia de pago y unta transaccion asociada a una class request
+ */
 export const createPreferenceService = async (
   classRequestId: number,
   userId: number,
@@ -72,12 +88,9 @@ export const createPreferenceService = async (
     const pref = await userPreference.create({
       body: {
         back_urls: {
-          success:
-            "https://frontend-software-eight.vercel.app/transaction/success", // WARN: placeholders ?
-          failure:
-            "https://frontend-software-eight.vercel.app/transaction/failure",
-          pending:
-            "https://frontend-software-eight.vercel.app/transaction/pending",
+          success: `${env.backend_url}/transactions/wh/success/${classRequest.classOfferId}/`,
+          failure: `${env.backend_url}/transactions/wh/failure/${classRequest.classOfferId}/`,
+          pending: `${env.backend_url}/transactions/wh/pending/${classRequest.classOfferId}/`,
         },
         auto_return: "approved",
         items: [
@@ -127,6 +140,9 @@ export const getPreferenceService = async (
       include: {
         transactions: {
           orderBy: { createdAt: "desc" },
+          where: {
+            status: { in: ["pending", "approved"] },
+          },
         },
       },
     });
@@ -145,6 +161,8 @@ export const getPreferenceService = async (
     let transaction = classRequest.transactions[0];
     let pref;
 
+    // NOTE: Si no existe una transacción en estado pending para esta clase
+    // creamos una junto a su preferencia
     if (!transaction) {
       const res = await createPreferenceService(classRequestId, userId);
       transaction = res.transaction;
@@ -188,8 +206,15 @@ export const createOAuthTokenService = async (code: string, userId: number) => {
       Date.now() + 180 * 24 * 60 * 60 * 1000,
     ); // 6 meses
 
-    await prisma.mercadopagoInfo.create({
-      data: {
+    await prisma.mercadopagoInfo.upsert({
+      where: { userId },
+      update: {
+        accessToken: access_token,
+        refreshToken: refresh_token,
+        accessTokenExpiration,
+        refreshTokenExpiration,
+      },
+      create: {
         userId,
         accessToken: access_token,
         refreshToken: refresh_token,
@@ -263,27 +288,38 @@ export const checkOAuthService = async (userId: number) => {
 
     const mercadopago = user?.mercadopagoInfo;
 
-    if (!user) throw new HttpError(404, "Usuario no encontrado");
+    if (!user)
+      return {
+        status: 404,
+        message: "Usuario no encontrado",
+        hasOAuth: false,
+      };
+
     if (!mercadopago)
-      throw new HttpError(
-        400,
-        "El usuario no ha vinculado su cuenta de MercadoPago",
-      );
+      return {
+        status: 400,
+        message: "El usuario no ha vinculado su cuenta de MercadoPago",
+        hasOAuth: false,
+      };
+
     if (mercadopago.accessTokenExpiration < new Date()) {
       if (mercadopago.refreshTokenExpiration < new Date()) {
-        throw new HttpError(
-          400,
-          "El token de refresco ha expirado, el usuario debe volver a vincular su cuenta de MercadoPago",
-        );
+        return {
+          status: 400,
+          message:
+            "El token de refresco ha expirado, el usuario debe volver a vincular su cuenta de MercadoPago",
+          hasOAuth: false,
+        };
       }
       await refreshOAuthTokenService(userId);
     }
 
-    return true;
+    return {
+      status: 200,
+      message: "Usuario tiene OAuth con MercadoPago",
+      hasOAuth: true,
+    };
   } catch (error) {
-    if (error instanceof HttpError) {
-      throw error;
-    }
     console.error(error);
     throw new HttpError(500, "Error al verificar el estado de OAuth");
   }
@@ -345,25 +381,91 @@ export const refreshOAuthTokenService = async (userId: number) => {
     if (error instanceof HttpError) {
       throw error;
     }
+    throw new HttpError(500, "Error al refrescar los tokens de OAuth");
   }
 };
 
-// preference.create({
-//   body: {
-//     back_urls: { // WARN: Es necesario que estas url llamen al backend para actualizar el estado de la transaccion
-//       success: "https://frontend-software-eight.vercel.app/trans/success", // WARN: placeholder para testear
-//       failure: "https://frontend-software-eight.vercel.app/trans/failure",
-//       pending: "https://frontend-software-eight.vercel.app/trans/pending"
-//     },
-//     auto_return: "approved",
-//     items: [
-//       {
-//         id: `1`,
-//         title: "titulo",
-//         description: "descripcion",
-//         quantity: 1,
-//         unit_price: 1
-//       }
-//     ],
-//   }
-// }).then(console.log).catch(console.error);
+export const refundPaymentService = async (
+  classRequestId: number,
+  userId: number,
+) => {
+  const classRequest = await prisma.classRequest.findUnique({
+    where: { id: classRequestId },
+    include: {
+      transactions: {
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  });
+
+  const noPagado: ClassRequestState[] = [
+    ClassRequestState.PaymentPending,
+    ClassRequestState.Created,
+  ];
+
+  if (!classRequest)
+    throw new HttpError(
+      404,
+      `Class Request con id ${classRequestId} no encontrada`,
+    );
+  if (classRequest.userId !== userId)
+    throw new HttpError(
+      403,
+      "No tienes permiso para acceder a esta oferta de clase",
+    );
+  if (noPagado.includes(classRequest.state))
+    throw new HttpError(400, "La class request aun no ha sido pagada");
+  if (classRequest.state === ClassRequestState.Approved)
+    throw new HttpError(400, "No se puede reembolsar una clase aprobada");
+  if (classRequest.state === ClassRequestState.PaymentRefunded)
+    throw new HttpError(400, "La class request ya ha sido reembolsada");
+
+  const transaction = classRequest?.transactions[0];
+
+  if (!transaction?.paymentId)
+    throw new HttpError(400, "La transaccion no tiene un pago asociado");
+
+  console.log("se va a refundear");
+
+  const refund = await paymetRefund.create({
+    payment_id: transaction.paymentId,
+  });
+
+  console.log(refund);
+
+  return refund;
+};
+
+export const redirectHandlerService = async (
+  classRequestId: number,
+  payload: RedirectPayload,
+) => {
+  const transaction = await prisma.transaction.findMany({
+    where: { classRequestId: classRequestId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!transaction[0])
+    throw new HttpError(
+      404,
+      `No se encontro transaccion para la class request con id ${classRequestId}`,
+    );
+
+  const code = (Math.floor(Math.random() * 9000) + 1000).toString(); //numero random de 4 digitos
+
+  await prisma.transaction.update({
+    where: { id: transaction[0].id },
+    data: {
+      paymentId: payload.payment_id,
+      status: payload.status,
+      confirmCode: code,
+    },
+  });
+
+  await prisma.classRequest.update({
+    where: { id: classRequestId },
+    data: {
+      state: ClassRequestState.Pending,
+    },
+  });
+};

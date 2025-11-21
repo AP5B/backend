@@ -4,8 +4,10 @@ import {
   checkOAuthController,
   createOAuthTokenController,
   getTrantactionController,
+  webhookPaymentController,
   refreshOAuthTokenController,
   updateTransactionController,
+  refundTransactionController,
 } from "../controllers/transactionController";
 
 const router = Router();
@@ -254,7 +256,64 @@ router.post("/:classRequest", authenticate, updateTransactionController);
 
 /**
  * @swagger
+ * /transactions/refund/{classRequest}:
+ *   post:
+ *     summary: Solicitar reembolso de una transacción
+ *     description: Crea una solicitud de reembolso para la transacción más reciente asociada al class request del usuario autenticado.
+ *     tags:
+ *       - Transactions
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/ClassRequestIdParam'
+ *     responses:
+ *       200:
+ *         description: Reembolso solicitado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MessageResponse'
+ *             example:
+ *               message: 'Reembolso solicitado correctamente'
+ *       400:
+ *         description: classRequest inválido o reembolso no permitido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MessageResponse'
+ *             example:
+ *               message: 'classRequest debe ser un numero'
+ *       403:
+ *         description: El usuario no puede solicitar reembolso para esta transacción
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MessageResponse'
+ *             example:
+ *               message: 'No tienes permiso para solicitar este reembolso'
+ *       404:
+ *         description: No existe la class request o la transacción asociada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MessageResponse'
+ *             example:
+ *               message: 'No se encontro transaccion para la class request con id 1'
+ *       500:
+ *         description: Error al procesar el reembolso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MessageResponse'
+ *             example:
+ *               message: 'Error al solicitar el reembolso'
+ */
+router.post("/refund/:classRequest", authenticate, refundTransactionController);
+
+/**
+ * @swagger
  * /transactions/oauth/check:
+
  *   get:
  *     summary: Verificar estado de vinculación OAuth con MercadoPago
  *     description: Determina si el usuario autenticado tiene tokens de MercadoPago vigentes. Refresca el token automáticamente si el access token está vencido pero el refresh token sigue vigente.
@@ -384,5 +443,7 @@ router.post("/oauth/token", authenticate, createOAuthTokenController);
  */
 // uso interno, ideal para un cron job
 router.post("/oauth/refresh/:userId", refreshOAuthTokenController);
+
+router.get("/wh/:status/:classRequest", webhookPaymentController);
 
 export default router;

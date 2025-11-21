@@ -28,9 +28,12 @@ enum ClassCategory {
 }
 
 enum ClassRequestState {
+  Created
+  PaymentPending
   Pending
   Approved
   Rejected
+  PaymentRefunded
 }
 
 model User {
@@ -80,7 +83,7 @@ model ClassRequest {
   classOffer    ClassOffer         @relation(fields: [classOfferId], references: [id], onDelete: Cascade)
   userId        Int
   user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  state         ClassRequestState  @default(Pending)
+  state         ClassRequestState  @default(Created)
   createdAt     DateTime           @default(now())
   day           Int
   slot          Int
@@ -91,6 +94,7 @@ model Transaction {
   id             Int           @id @default(autoincrement())
   preferenceId   String
   paymentId      String?
+  confirmCode    String?
   status         String        @default("pending")
   classRequestId Int
   classRequest   ClassRequest  @relation(fields: [classRequestId], references: [id], onDelete: Cascade)

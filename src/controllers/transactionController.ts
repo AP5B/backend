@@ -6,7 +6,11 @@ import {
   refreshOAuthTokenService,
   getPreferenceService,
   updateTransactionService,
+  RedirectPayload,
+  redirectHandlerService,
+  refundPaymentService,
 } from "../services/transactionService";
+import env from "../config/env";
 
 export const getTrantactionController = async (req: Request, res: Response) => {
   const classResquestId = parseInt(req.params.classRequest as string);
@@ -51,6 +55,22 @@ export const updateTransactionController = async (
   });
 };
 
+export const refundTransactionController = async (
+  req: Request,
+  res: Response,
+) => {
+  const classResquestId = parseInt(req.params.classRequest as string);
+  const userId = res.locals.user.id;
+
+  const refund = await refundPaymentService(classResquestId, userId);
+
+  res.status(200).json({
+    status: refund.status,
+    resaon: refund.reason,
+    amount_refunded: refund.amount_refunded_to_payer,
+  });
+};
+
 export const createOAuthTokenController = async (
   req: Request,
   res: Response,
@@ -67,13 +87,11 @@ export const createOAuthTokenController = async (
 
 export const checkOAuthController = async (_req: Request, res: Response) => {
   const userId = res.locals.user.id;
-  const hasOAuth = await checkOAuthService(userId);
 
+  const response = await checkOAuthService(userId);
   res.status(200).json({
-    message: hasOAuth
-      ? "Usuario tiene OAuth con MercadoPago"
-      : "Usuario no tiene OAuth con MercadoPago",
-    hasOAuth: hasOAuth,
+    message: response.message,
+    hasOAuth: response.hasOAuth,
   });
 };
 
@@ -92,4 +110,37 @@ export const refreshOAuthTokenController = async (
   res.status(200).json({
     message: "OAuth token refrescado exitosamente",
   });
+};
+
+export const webhookPaymentController = async (req: Request, res: Response) => {
+  const { payment_id, status, external_reference, merchant_order_id } =
+    req.query;
+  const classRequestId = parseInt(req.params.classRequest as string, 10);
+
+  //https://www.mercadopago.cl/developers/es/docs/your-integrations/notifications/webhooks#editor_2
+  // const header = req.header("x-signature"); // TODO: Validar fuente
+
+  if (Number.isNaN(classRequestId))
+    throw new HttpError(400, "Invalid classRequest parameter");
+
+  // Validate that all required properties exist
+  if (
+    typeof payment_id !== "string" ||
+    typeof status !== "string" ||
+    typeof external_reference !== "string" ||
+    typeof merchant_order_id !== "string"
+  ) {
+    throw new HttpError(400, "Invalid query parameters for payment redirect");
+  }
+
+  const payload: RedirectPayload = {
+    payment_id,
+    status,
+    external_reference,
+    merchant_order_id,
+  };
+
+  await redirectHandlerService(classRequestId, payload);
+
+  res.redirect(`${env.frontend_url}/courses/${classRequestId}`);
 };

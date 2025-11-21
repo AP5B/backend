@@ -90,6 +90,8 @@ export const getClassOfferByIdController = async (
   const limit = parseInt(req.query.reviewsLimit as string) || 5;
   const normPage = page > 0 ? page : 1;
   const normLimit = limit > 0 ? limit : 5;
+  const userId = res.locals.user?.id || null;
+  console.log(userId);
 
   if (isNaN(classId))
     throw new HttpError(
@@ -101,6 +103,7 @@ export const getClassOfferByIdController = async (
     classId,
     normPage,
     normLimit,
+    userId,
   );
 
   res.status(200).json(classOffer);
@@ -113,9 +116,9 @@ export const createClassOfferController = async (
   const userId: number = res.locals.user.id;
   const reqBody = req.body as classOfferRequestBody;
 
-  const haveOauth = await checkOAuthService(userId);
+  const response = await checkOAuthService(userId);
 
-  if (haveOauth === false) {
+  if (response.hasOAuth === false) {
     throw new HttpError(
       403,
       "El usuario no ha completado el proceso de OAuth de Mercado Pago.",

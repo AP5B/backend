@@ -5,6 +5,8 @@ import {
   getTutorClassRequestsController,
   updateClassRequestStateController,
   getClassRequestsByClassController,
+  confirmClassRequestController,
+  acceptClassRequestController,
 } from "../controllers/classRequestController";
 import { authenticate, autorize } from "../middlewares/authMiddleware";
 
@@ -664,6 +666,164 @@ router.get(
   authenticate,
   autorize("Teacher"),
   getClassRequestsByClassController,
+);
+
+/**
+ * @swagger
+ * /class-requests/accept/{classRequestId}:
+ *   post:
+ *     summary: Aceptar una solicitud de clase
+ *     description: Permite al tutor aceptar una solicitud de clase pendiente de una de sus ofertas.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classRequestId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la solicitud de clase a aceptar.
+ *     responses:
+ *       200:
+ *         description: Solicitud aceptada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Solicitud de clase aceptada exitosamente
+ *       400:
+ *         description: Datos inválidos en la solicitud
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: classRequestId debe ser un numero
+ *       401:
+ *         description: Usuario no autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no autenticado
+ *       403:
+ *         description: El usuario no tiene el rol Teacher
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: No tienes permisos para aceptar esta solicitud
+ *       404:
+ *         description: Solicitud de clase no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La solicitud de clase no existe
+ */
+router.post(
+  "/accept/:classRequestId",
+  authenticate,
+  autorize("Teacher"),
+  acceptClassRequestController,
+);
+
+/**
+ * @swagger
+ * /class-requests/confirm/{classRequestId}:
+ *   post:
+ *     summary: Confirmar una clase aceptada
+ *     description: Permite al tutor confirmar una clase aceptada utilizando el código de validación enviado.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classRequestId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la solicitud de clase que se confirmará.
+ *       - in: query
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Código de verificación proporcionado para confirmar la clase.
+ *     responses:
+ *       200:
+ *         description: Clase confirmada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Clase confirmada exitosamente
+ *       400:
+ *         description: Datos inválidos (ID o código)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: classRequestId debe ser un numero
+ *       401:
+ *         description: Usuario no autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no autenticado
+ *       403:
+ *         description: El usuario no tiene el rol Teacher
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: No tienes permisos para confirmar esta solicitud
+ *       404:
+ *         description: Solicitud de clase no encontrada o código inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La solicitud de clase no existe o el código es incorrecto
+ */
+router.post(
+  "/confirm/:classRequestId",
+  authenticate,
+  autorize("Teacher"),
+  confirmClassRequestController,
 );
 
 export default router;

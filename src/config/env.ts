@@ -12,6 +12,8 @@ interface env {
   mp_client_id: string;
   mp_client_secret: string;
   mp_redirect_uri: string;
+  frontend_url: string;
+  backend_url: string;
 }
 
 const env: env = {
@@ -24,6 +26,8 @@ const env: env = {
   mp_client_id: `${process.env.MP_CLIENT_ID}`,
   mp_client_secret: `${process.env.MP_CLIENT_SECRET}`,
   mp_redirect_uri: `${process.env.MP_REDIRECT_URI}`,
+  frontend_url: `${process.env.FRONTEND_URL}`,
+  backend_url: `${process.env.BACKEND_URL}`,
 };
 
 export default env;
