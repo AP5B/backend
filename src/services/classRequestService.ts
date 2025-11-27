@@ -65,10 +65,21 @@ export const createClassRequestService = async (
   try {
     // Verificar que la clase exista
     const classOffer = await prisma.classOffer.findUnique({
-      where: { id: body.classOfferId },
+      where: { id: body.classOfferId, isDeleted: false },
+      select: {
+        authorId: true,
+      },
     });
+
     if (!classOffer) {
       throw new HttpError(404, "La clase especificada no existe");
+    }
+
+    if (classOffer.authorId === userId) {
+      throw new HttpError(
+        403,
+        "No puedes hacer una reserva en tu propia clase",
+      );
     }
 
     const existingRequest = await prisma.classRequest.findFirst({
@@ -78,6 +89,7 @@ export const createClassRequestService = async (
         day: body.day,
         slot: body.slot,
       },
+      select: { id: true },
     });
 
     if (existingRequest) {
@@ -168,6 +180,7 @@ export const getUserClassRequestService = async (
                 username: true,
                 first_name: true,
                 last_name_1: true,
+                isDeleted: true,
               },
             },
           },
@@ -225,6 +238,7 @@ export const getTutorClassRequestsService = async (
             email: true,
             first_name: true,
             last_name_1: true,
+            isDeleted: true,
           },
         },
         classOffer: {
@@ -272,7 +286,11 @@ export const updateClassRequestStateService = async (
       where: { id: classRequestId },
       select: {
         state: true,
-        classOffer: { select: { authorId: true } },
+        classOffer: {
+          select: {
+            authorId: true,
+          },
+        },
       },
     });
 
@@ -304,6 +322,7 @@ export const updateClassRequestStateService = async (
             email: true,
             first_name: true,
             last_name_1: true,
+            isDeleted: true,
           },
         },
         classOffer: {
@@ -372,6 +391,7 @@ export const getClassRequestsByClassService = async (
             email: true,
             first_name: true,
             last_name_1: true,
+            isDeleted: true,
           },
         },
         classOffer: {

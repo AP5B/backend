@@ -74,6 +74,7 @@ export const getClassOffersService = async (
         : {}),
       ...(query.category ? { category: query.category } : {}),
       ...(filterPrice ? { price: filterPrice } : {}),
+      isDeleted: false,
     };
 
     // query
@@ -140,6 +141,7 @@ export const getClassOfferByIdService = async (
     const classOffer = await prisma.classOffer.findUnique({
       where: {
         id: classId,
+        isDeleted: false,
       },
       select: {
         id: true,
@@ -163,7 +165,7 @@ export const getClassOfferByIdService = async (
                 rating: true,
                 content: true,
                 createdAt: true,
-                reviewer: { select: { username: true } },
+                reviewer: { select: { username: true, isDeleted: true } },
               },
             },
           },
@@ -172,18 +174,23 @@ export const getClassOfferByIdService = async (
     });
 
     if (!classOffer) {
-      throw new HttpError(
-        404,
-        `No existe una oferta de clase con id ${classId}`,
-      );
+      throw new HttpError(404, `Oferta de clase no encontrada`);
     }
 
     const formattedReviews = classOffer.author.receivedReviews.map((review) => {
       const formattedCreatedAt = new Date(review.createdAt)
         .toISOString()
         .split("T")[0];
+
+      const username =
+        review.reviewer.isDeleted === true
+          ? "Eliminado"
+          : review.reviewer.username;
+      const reviewer = { ...review.reviewer, username: username };
+
       return {
         ...review,
+        reviewer: reviewer,
         createdAt: formattedCreatedAt,
       };
     });
@@ -230,6 +237,7 @@ export const createClassOfferService = async (
       },
     });
   } catch (error) {
+    if (error instanceof HttpError) throw error;
     console.log(error);
     throw new HttpError(500, "Error interno en el servidor.");
   }
@@ -246,11 +254,15 @@ export const editClassOfferService = async (
       where: {
         id: id,
       },
+      select: {
+        authorId: true,
+      },
     });
 
     if (!classOffer)
       throw new HttpError(404, `No existe una oferta de clase con id ${id}.`);
-    if (classOffer?.authorId != userId)
+
+    if (classOffer.authorId != userId)
       throw new HttpError(401, "El recurso no pertenece al usuario.");
 
     const updateClassOffer = await prisma.classOffer.update({
@@ -276,24 +288,30 @@ export const destroyClassOfferService = async (
     const classOffer = await prisma.classOffer.findFirst({
       where: {
         id: classOfferId,
+        isDeleted: false,
+      },
+      select: {
+        authorId: true,
       },
     });
 
-    if (!classOffer)
+    if (!classOffer) {
       throw new HttpError(
         404,
         `No existe una oferta de clase con id ${classOfferId}.`,
       );
-    if (classOffer.authorId != userId)
-      throw new HttpError(401, "El recurso no pertenece al usuario.");
+    }
 
-    const deleteClassOffer = await prisma.classOffer.delete({
-      where: {
-        id: classOfferId,
-      },
+    if (classOffer.authorId != userId) {
+      throw new HttpError(401, "El recurso no pertenece al usuario.");
+    }
+
+    const deletedClassOffer = await prisma.classOffer.update({
+      where: { id: classOfferId },
+      data: { isDeleted: true },
     });
 
-    return deleteClassOffer;
+    return deletedClassOffer;
   } catch (error: unknown) {
     if (error instanceof HttpError) throw error;
     console.log(error);
@@ -313,9 +331,11 @@ export const getMyClassOffersService = async (
 ) => {
   try {
     const offset = (page - 1) * limit;
+
     const classOffers = await prisma.classOffer.findMany({
       where: {
         authorId: authorId,
+        isDeleted: false,
       },
       orderBy: {
         id: "desc",
@@ -366,6 +386,7 @@ export const getMyClassOffersService = async (
 
     return final;
   } catch (error) {
+    if (error instanceof HttpError) throw error;
     console.log(error);
     throw new HttpError(500, "Error interno del servidor.");
   }
