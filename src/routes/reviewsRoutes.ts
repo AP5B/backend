@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { authenticate, autorize } from "../middlewares/authMiddleware";
+import {
+  authenticate,
+  autorize,
+  checkUserIsDeleted,
+} from "../middlewares/authMiddleware";
 import {
   createReviewController,
   getTeacherReviewsController,
@@ -10,7 +14,12 @@ import {
 
 const router = Router();
 
-router.get("/user", authenticate, getCurrentUserReviewsController);
+router.get(
+  "/user",
+  authenticate,
+  checkUserIsDeleted,
+  getCurrentUserReviewsController,
+);
 /**
  * @swagger
  * /reviews/user:
@@ -104,6 +113,7 @@ router.get("/user", authenticate, getCurrentUserReviewsController);
 router.post(
   "/:teacherId",
   authenticate,
+  checkUserIsDeleted,
   autorize("Student"),
   createReviewController,
 );
@@ -350,6 +360,7 @@ router.get("/:teacherId", getTeacherReviewsController);
 router.patch(
   "/:reviewId",
   authenticate,
+  checkUserIsDeleted,
   autorize("Student"),
   updateReviewController,
 );
@@ -475,7 +486,12 @@ router.patch(
  *                   example: Error interno del servidor.
  */
 
-router.delete("/:reviewId", authenticate, deleteReviewController);
+router.delete(
+  "/:reviewId",
+  authenticate,
+  checkUserIsDeleted,
+  deleteReviewController,
+);
 /**
  * @swagger
  * /reviews/{reviewId}:

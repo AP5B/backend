@@ -74,7 +74,7 @@ export const getClassOffersService = async (
         : {}),
       ...(query.category ? { category: query.category } : {}),
       ...(filterPrice ? { price: filterPrice } : {}),
-      author: { isDeleted: false },
+      isDeleted: false,
     };
 
     // query
@@ -141,6 +141,7 @@ export const getClassOfferByIdService = async (
     const classOffer = await prisma.classOffer.findUnique({
       where: {
         id: classId,
+        isDeleted: false,
       },
       select: {
         id: true,
@@ -156,7 +157,6 @@ export const getClassOfferByIdService = async (
             first_name: true,
             last_name_1: true,
             availabilities: { select: { day: true, slot: true } },
-            isDeleted: true,
             receivedReviews: {
               skip: offset,
               take: reviewsLimit,
@@ -174,14 +174,7 @@ export const getClassOfferByIdService = async (
     });
 
     if (!classOffer) {
-      throw new HttpError(
-        404,
-        `No existe una oferta de clase con id ${classId}`,
-      );
-    }
-
-    if (classOffer.author.isDeleted === true) {
-      throw new HttpError(403, `La cuenta del profesor fue suspendida.`);
+      throw new HttpError(404, `Oferta de clase no encontrada`);
     }
 
     const formattedReviews = classOffer.author.receivedReviews.map((review) => {
@@ -234,15 +227,6 @@ export const createClassOfferService = async (
   reqBody: classOfferRequestBody,
 ) => {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: reqBody.authorId },
-      select: { isDeleted: true },
-    });
-
-    if (user && user.isDeleted === true) {
-      throw new HttpError(403, "Operación denegada, tu cuenta fue suspendida.");
-    }
-
     return await prisma.classOffer.create({
       data: {
         title: reqBody.title,
@@ -272,7 +256,6 @@ export const editClassOfferService = async (
       },
       select: {
         authorId: true,
-        author: { select: { isDeleted: true } },
       },
     });
 
@@ -281,10 +264,6 @@ export const editClassOfferService = async (
 
     if (classOffer.authorId != userId)
       throw new HttpError(401, "El recurso no pertenece al usuario.");
-
-    if (classOffer.author.isDeleted === true) {
-      throw new HttpError(403, "Operación denegada, tu cuenta fue suspendida");
-    }
 
     const updateClassOffer = await prisma.classOffer.update({
       where: {
@@ -309,10 +288,10 @@ export const destroyClassOfferService = async (
     const classOffer = await prisma.classOffer.findFirst({
       where: {
         id: classOfferId,
+        isDeleted: false,
       },
       select: {
         authorId: true,
-        author: { select: { isDeleted: true } },
       },
     });
 
@@ -327,17 +306,12 @@ export const destroyClassOfferService = async (
       throw new HttpError(401, "El recurso no pertenece al usuario.");
     }
 
-    if (classOffer.author.isDeleted === true) {
-      throw new HttpError(403, "Operación denegada, tu cuenta fue suspendida");
-    }
-
-    const deleteClassOffer = await prisma.classOffer.delete({
-      where: {
-        id: classOfferId,
-      },
+    const deletedClassOffer = await prisma.classOffer.update({
+      where: { id: classOfferId },
+      data: { isDeleted: true },
     });
 
-    return deleteClassOffer;
+    return deletedClassOffer;
   } catch (error: unknown) {
     if (error instanceof HttpError) throw error;
     console.log(error);
@@ -358,18 +332,10 @@ export const getMyClassOffersService = async (
   try {
     const offset = (page - 1) * limit;
 
-    const user = await prisma.user.findUnique({
-      where: { id: authorId },
-      select: { isDeleted: true },
-    });
-
-    if (user && user.isDeleted === true) {
-      throw new HttpError(403, "Operación denegada, tu cuenta fue suspendida.");
-    }
-
     const classOffers = await prisma.classOffer.findMany({
       where: {
         authorId: authorId,
+        isDeleted: false,
       },
       orderBy: {
         id: "desc",

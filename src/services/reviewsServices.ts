@@ -36,15 +36,6 @@ export const createReviewService = async (
       throw new HttpError(403, "La cuenta del profesor fue suspendida.");
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: reviewerId },
-      select: { isDeleted: true },
-    });
-
-    if (user && user.isDeleted === true) {
-      throw new HttpError(403, "Operación denegada, tu cuenta fue suspendida.");
-    }
-
     const review = await prisma.review.findFirst({
       where: {
         teacherId: teacherId,
@@ -141,7 +132,6 @@ export const updateReviewService = async (
       where: { id: reviewId },
       select: {
         reviewerId: true,
-        reviewer: { select: { isDeleted: true } },
       },
     });
 
@@ -151,10 +141,6 @@ export const updateReviewService = async (
 
     if (review.reviewerId !== userId) {
       throw new HttpError(401, `El recurso no le pertenece al usuario actual.`);
-    }
-
-    if (review.reviewer.isDeleted === true) {
-      throw new HttpError(403, "Operación denegada, tu cuenta fue suspendida.");
     }
 
     const editedReview = await prisma.review.update({
@@ -183,6 +169,7 @@ export const deleteReviewService = async (reviewId: number, userId: number) => {
   try {
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
+      select: { reviewerId: true },
     });
 
     if (!review) {

@@ -6,7 +6,11 @@ import {
   updateClassRequestStateController,
   getClassRequestsByClassController,
 } from "../controllers/classRequestController";
-import { authenticate, autorize } from "../middlewares/authMiddleware";
+import {
+  authenticate,
+  autorize,
+  checkUserIsDeleted,
+} from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -226,6 +230,7 @@ router.get(
 router.post(
   "/",
   authenticate,
+  checkUserIsDeleted,
   autorize("Student"),
   createReservationController,
 );
@@ -347,6 +352,7 @@ router.post(
 router.get(
   "/me",
   authenticate,
+  checkUserIsDeleted,
   autorize("Student"),
   getUserClassRequestController,
 );
@@ -471,6 +477,7 @@ router.get(
 router.get(
   "/tutor",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   getTutorClassRequestsController,
 );
@@ -586,6 +593,7 @@ router.get(
 router.patch(
   "/:classRequestId",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   updateClassRequestStateController,
 );
@@ -701,6 +709,7 @@ router.patch(
 router.get(
   "/:classOfferId",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   getClassRequestsByClassController,
 );

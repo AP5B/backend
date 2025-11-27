@@ -18,10 +18,17 @@ export const deleteUserAccountService = async (userId: number) => {
       throw new HttpError(400, "La cuenta del usuario ya fue eliminada.");
     }
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { isDeleted: true },
-    });
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: userId },
+        data: { isDeleted: true },
+      }),
+
+      prisma.classOffer.updateMany({
+        where: { authorId: userId },
+        data: { isDeleted: true },
+      }),
+    ]);
   } catch (error) {
     if (error instanceof HttpError) {
       throw error;

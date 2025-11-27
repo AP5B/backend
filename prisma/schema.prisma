@@ -62,6 +62,7 @@ model ClassOffer {
   createdAt      DateTime        @default(now()) @db.Timestamp(0)
   category       ClassCategory   @default(Otro)
   classRequests  ClassRequest[]
+  isDeleted      Boolean         @default(false)
 }
 
 model ClassRequest {

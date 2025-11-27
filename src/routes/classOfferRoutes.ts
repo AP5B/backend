@@ -7,7 +7,11 @@ import {
   deleteClassOfferController,
   getMyClassOffersController,
 } from "../controllers/classOfferController";
-import { authenticate, autorize } from "../middlewares/authMiddleware";
+import {
+  authenticate,
+  autorize,
+  checkUserIsDeleted,
+} from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -332,6 +336,7 @@ router.get("/", getClassOffersController);
 router.get(
   "/me",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   getMyClassOffersController,
 );
@@ -399,9 +404,6 @@ router.get(
  *                       type: string
  *                     last_name_1:
  *                       type: string
- *                     isDeleted:
- *                       type: bool
- *                       example: false
  *                     availabilities:
  *                       type: array
  *                       items:
@@ -444,18 +446,8 @@ router.get(
  *                 message:
  *                   type: string
  *                   example: La id, de la oferta de clase, debe ser un número.
- *       403:
- *         description: La cuenta de el profesor dueño de la clase fue eliminada.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: La cuenta del profesor fue suspendida.
  *       404:
- *         description: No se encontró la oferta de clase con el ID especificado.
+ *         description: No se encontró la oferta de clase con el ID especificado o fue eliminada.
  *         content:
  *           application/json:
  *             schema:
@@ -463,7 +455,7 @@ router.get(
  *               properties:
  *                 message:
  *                   type: string
- *                   example: No existe una oferta de clase con id {classId}
+ *                   example: Oferta de clase no encontrada.
  *       500:
  *         description: Error interno del servidor.
  *         content:
@@ -555,7 +547,13 @@ router.get("/:classId", getClassOfferByIdController);
  *                   type: string
  *                   example: Error interno del servidor
  */
-router.post("/", authenticate, autorize("Teacher"), createClassOfferController);
+router.post(
+  "/",
+  authenticate,
+  checkUserIsDeleted,
+  autorize("Teacher"),
+  createClassOfferController,
+);
 
 /**
  * @swagger
@@ -651,6 +649,7 @@ router.post("/", authenticate, autorize("Teacher"), createClassOfferController);
 router.patch(
   "/:classId",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   editClassOfferController,
 );
@@ -739,6 +738,7 @@ router.patch(
 router.delete(
   "/:classId",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   deleteClassOfferController,
 );
