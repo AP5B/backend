@@ -57,7 +57,7 @@ export const createApp = () => {
 
   const limiter = rateLimit({
     windowMs: 3 * 60 * 1000,
-    max: 50,
+    max: 100,
     message: {
       error: "Demasiadas solicitudes.",
       retryAfter: "3 minutos",
@@ -68,7 +68,7 @@ export const createApp = () => {
 
   const authLimiter = rateLimit({
     windowMs: 1 * 60 * 1000,
-    max: 20,
+    max: 50,
     message: {
       error: "Demasiadas solicitudes.",
       retryAfter: "1 minuto",
