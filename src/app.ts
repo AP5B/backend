@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 import { errorHandler } from "./middlewares/errorHandler";
 import exampleRoutes from "./routes/exampleRoutes";
 import healthRoutes from "./routes/healthRoutes";
@@ -54,13 +55,39 @@ export const createApp = () => {
   app.use(express.json()); // body parser
   app.use(cookieParser());
 
+  const limiter = rateLimit({
+    windowMs: 3 * 60 * 1000,
+    max: 100,
+    message: {
+      error: "Demasiadas solicitudes.",
+      retryAfter: "3 minutos",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  const authLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 50,
+    message: {
+      error: "Demasiadas solicitudes.",
+      retryAfter: "1 minuto",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true,
+  });
+
   app.use("/", exampleRoutes);
   app.use("/", healthRoutes);
-  app.use("/", registerRoutes);
-  app.use("/", loginRoutes);
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // Swagger
+
+  app.use(limiter);
+
+  app.use("/", authLimiter, registerRoutes);
+  app.use("/", authLimiter, loginRoutes);
   app.use("/class-offer/", classRoutes);
   app.use("/availability/", availabilityRoutes);
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // Swagger
   app.use("/reviews/", reviewsRoutes);
   app.use("/class-requests/", classRequestRoutes);
   app.use("/user-account/", userAccountRoutes);
