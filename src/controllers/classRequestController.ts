@@ -7,6 +7,7 @@ import {
   getTutorClassRequestsService,
   updateClassRequestStateService,
   getClassRequestsByClassService,
+  getClassRequestByIdService,
 } from "../services/classRequestService";
 
 /**
@@ -171,4 +172,19 @@ export const getClassRequestsByClassController = async (
   return res.status(200).json({
     data,
   });
+};
+
+export const getClassRequestByIdController = async (
+  req: Request,
+  res: Response,
+) => {
+  const classRequestId = parseInt(req.params.classRequestId as string);
+
+  if (!classRequestId) {
+    throw new HttpError(400, "Id de la reserva faltante.");
+  }
+
+  const classReq = await getClassRequestByIdService(classRequestId);
+
+  return res.status(200).json({ classReq });
 };

@@ -5,6 +5,7 @@ import {
   getTutorClassRequestsController,
   updateClassRequestStateController,
   getClassRequestsByClassController,
+  getClassRequestByIdController,
 } from "../controllers/classRequestController";
 import {
   authenticate,
@@ -161,6 +162,9 @@ router.get(
  *                         category:
  *                           type: string
  *                           example: Deportes
+ *                         isDeleted:
+ *                           type: boolean
+ *                           example: false
  *                         author:
  *                           type: object
  *                           properties:
@@ -173,6 +177,9 @@ router.get(
  *                             last_name_1:
  *                               type: string
  *                               example: López
+ *                             isDeleted:
+ *                               type: boolean
+ *                               example: false
  *       400:
  *         description: Error en los datos enviados
  *         content:
@@ -301,6 +308,9 @@ router.post(
  *                           category:
  *                             type: string
  *                             example: "Calculo"
+ *                           isDeleted:
+ *                             type: boolean
+ *                             example: false
  *                           author:
  *                             type: object
  *                             properties:
@@ -443,6 +453,9 @@ router.get(
  *                           price:
  *                             type: number
  *                             example: 15000
+ *                           isDeleted:
+ *                             type: boolean
+ *                             example: false
  *       401:
  *         description: Usuario no autenticado o sin rol Teacher
  *         content:
@@ -655,12 +668,14 @@ router.patch(
  *                           email: { type: string, example: alumno1@uc.cl }
  *                           first_name: { type: string, nullable: true, example: null }
  *                           last_name_1: { type: string, nullable: true, example: null }
+ *                           isDeleted: { type: boolean, example: false }
  *                       classOffer:
  *                         type: object
  *                         properties:
  *                           title: { type: string, example: Calculo 1 }
  *                           category: { type: string, example: Calculo }
  *                           price: { type: integer, example: 100 }
+ *                           isDeleted: { type: boolean, example: false }
  *
  *       400:
  *         description: ID de clase inválido
@@ -712,6 +727,115 @@ router.get(
   checkUserIsDeleted,
   autorize("Teacher"),
   getClassRequestsByClassController,
+);
+
+/**
+ * @swagger
+ * /class-requests/{classRequestId}:
+ *   get:
+ *     summary: Obtener una reserva específica por su ID
+ *     description: >
+ *       Permite a un estudiante autenticado obtener los detalles completos de una reserva,
+ *       incluyendo información de la clase y del profesor.
+ *       Requiere un **access_token** válido y que la cuenta del usuario no esté suspendida.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classRequestId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID numérico de la reserva.
+ *     responses:
+ *       200:
+ *         description: Datos de la reserva obtenidos correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 classReq:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     day:
+ *                       type: integer
+ *                       example: 1
+ *                     slot:
+ *                       type: integer
+ *                       example: 1
+ *                     createdAt:
+ *                       type: string
+ *                       example: "2025-01-14"
+ *                     state:
+ *                       type: string
+ *                       example: "PENDING"
+ *                     classOffer:
+ *                       type: object
+ *                       properties:
+ *                         title:
+ *                           type: string
+ *                         price:
+ *                           type: number
+ *                         category:
+ *                           type: string
+ *                         isDeleted:
+ *                           type: boolean
+ *                           example: false
+ *                         author:
+ *                           type: object
+ *                           properties:
+ *                             username:
+ *                               type: string
+ *                             first_name:
+ *                               type: string
+ *                             last_name_1:
+ *                               type: string
+ *                             isDeleted:
+ *                               type: boolean
+ *                               example: false
+ *
+ *       400:
+ *         description: El ID de la reserva es inválido o no fue proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Id de la reserva faltante."
+ *
+ *       401:
+ *         description: Token faltante, inválido o expirado.
+ *
+ *       403:
+ *         description: Operación denegada, tu cuenta fue suspendida.
+ *
+ *       404:
+ *         description: La reserva especificada no existe.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "La reserva especificada no existe."
+ *
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.get(
+  "/:classRequestId",
+  authenticate,
+  checkUserIsDeleted,
+  autorize("Student"),
+  getClassRequestByIdController,
 );
 
 export default router;
