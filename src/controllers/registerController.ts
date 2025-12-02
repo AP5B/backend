@@ -37,7 +37,7 @@ const validateRegisterBody = (body: registerRequestBody) => {
   // Nombre
   if (!firstName) throw new HttpError(400, "El nombre no puede estar vacío.");
   if (firstName.length < 3 || firstName.length > 30)
-    throw new HttpError(400, "El nombre debe tener entre 3 y 30 caracteres");
+    throw new HttpError(400, "El nombre debe tener entre 3 y 30 caracteres.");
   if (!nameRegex.test(firstName))
     throw new HttpError(
       400,

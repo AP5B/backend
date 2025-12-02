@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import rateLimit from "express-rate-limit";
 import { errorHandler } from "./middlewares/errorHandler";
 import exampleRoutes from "./routes/exampleRoutes";
 import healthRoutes from "./routes/healthRoutes";
@@ -15,6 +14,7 @@ import env from "./config/env";
 import reviewsRoutes from "./routes/reviewsRoutes";
 import classRequestRoutes from "./routes/classRequestRoutes";
 import userAccountRoutes from "./routes/userAccountRoutes";
+import { limiter, authLimiter } from "./utils/rateLimiters";
 
 // Swagger setup
 const options = {
@@ -33,6 +33,7 @@ const swaggerSpec = swaggerJSDoc(options);
 export const createApp = () => {
   const app = express();
 
+  const isTest = process.env.NODE_ENV === "test";
   const allowedOrigins = env.allowedOrigins?.split(",") || [];
 
   app.use(
@@ -55,37 +56,20 @@ export const createApp = () => {
   app.use(express.json()); // body parser
   app.use(cookieParser());
 
-  const limiter = rateLimit({
-    windowMs: 3 * 60 * 1000,
-    max: 100,
-    message: {
-      error: "Demasiadas solicitudes.",
-      retryAfter: "3 minutos",
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-
-  const authLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000,
-    max: 50,
-    message: {
-      error: "Demasiadas solicitudes.",
-      retryAfter: "1 minuto",
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-    skipSuccessfulRequests: true,
-  });
-
   app.use("/", exampleRoutes);
   app.use("/", healthRoutes);
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // Swagger
 
-  app.use(limiter);
+  if (!isTest) {
+    app.use(limiter);
+    app.use("/", authLimiter, registerRoutes);
+    app.use("/", authLimiter, loginRoutes);
+  } else {
+    console.log("Rate limit deshabilitado para testing");
+    app.use("/", registerRoutes);
+    app.use("/", loginRoutes);
+  }
 
-  app.use("/", authLimiter, registerRoutes);
-  app.use("/", authLimiter, loginRoutes);
   app.use("/class-offer/", classRoutes);
   app.use("/availability/", availabilityRoutes);
   app.use("/reviews/", reviewsRoutes);
