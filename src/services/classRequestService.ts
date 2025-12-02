@@ -119,11 +119,13 @@ export const createClassRequestService = async (
             title: true,
             price: true,
             category: true,
+            isDeleted: true,
             author: {
               select: {
                 username: true,
                 first_name: true,
                 last_name_1: true,
+                isDeleted: true,
               },
             },
           },
@@ -175,6 +177,7 @@ export const getUserClassRequestService = async (
             title: true,
             price: true,
             category: true,
+            isDeleted: true,
             author: {
               select: {
                 username: true,
@@ -224,7 +227,10 @@ export const getTutorClassRequestsService = async (
     // Buscar solicitudes relacionadas con las clases del tutor
     const classRequests = await prisma.classRequest.findMany({
       where: {
-        classOffer: { authorId: tutorId },
+        classOffer: {
+          authorId: tutorId,
+          isDeleted: false,
+        },
       },
       select: {
         id: true,
@@ -246,6 +252,7 @@ export const getTutorClassRequestsService = async (
             title: true,
             category: true,
             price: true,
+            isDeleted: true,
           },
         },
       },
@@ -308,7 +315,7 @@ export const updateClassRequestStateService = async (
 
     // Actualizar el estado
     const updatedRequest = await prisma.classRequest.update({
-      where: { id: classRequestId },
+      where: { id: classRequestId, classOffer: { isDeleted: false } },
       data: { state: newState },
       select: {
         id: true,
@@ -363,7 +370,7 @@ export const getClassRequestsByClassService = async (
   try {
     // Validar que la clase exista y pertenezca al tutor
     const classOffer = await prisma.classOffer.findUnique({
-      where: { id: classOfferId },
+      where: { id: classOfferId, isDeleted: false },
       select: { authorId: true },
     });
 
@@ -399,6 +406,7 @@ export const getClassRequestsByClassService = async (
             title: true,
             category: true,
             price: true,
+            isDeleted: true,
           },
         },
       },
@@ -417,5 +425,47 @@ export const getClassRequestsByClassService = async (
     console.error("Error en getClassRequestsByClassService:", error);
     if (error instanceof HttpError) throw error;
     throw new HttpError(500, "Error al obtener las reservas de la clase");
+  }
+};
+
+export const getClassRequestByIdService = async (classRequestId: number) => {
+  try {
+    const classReq = await prisma.classRequest.findUnique({
+      where: { id: classRequestId },
+      select: {
+        id: true,
+        day: true,
+        slot: true,
+        createdAt: true,
+        state: true,
+        classOffer: {
+          select: {
+            title: true,
+            price: true,
+            category: true,
+            isDeleted: true,
+            author: {
+              select: {
+                username: true,
+                first_name: true,
+                last_name_1: true,
+                isDeleted: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!classReq) {
+      throw new HttpError(404, `La reserva especificada no existe.`);
+    }
+
+    const formattedCreatedAt = classReq.createdAt.toISOString().split("T")[0];
+    return { ...classReq, createdAt: formattedCreatedAt };
+  } catch (error) {
+    console.error(error);
+    if (error instanceof HttpError) throw error;
+    throw new HttpError(500, `Error interno del servidor: ${error}`);
   }
 };
