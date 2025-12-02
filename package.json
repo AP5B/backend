@@ -14,8 +14,8 @@
     "lint": "eslint 'src/**/*.ts'",
     "db:deploy": "npx prisma migrate deploy && npx prisma generate",
     "prepare": "if [ \"$NODE_ENV\" = \"development\" ]; then husky install; fi",
-    "test": "jest --runInBand --coverage",
-    "test:only": "jest -- runInBand"
+    "test": "cross-env NODE_ENV=test jest --runInBand --coverage",
+    "test:only": "cross-env NODE_ENV=test jest --runInBand"
   },
   "lint-staged": {
     "**/*.{js,ts}": [
@@ -37,12 +37,13 @@
   },
   "homepage": "https://github.com/FinzoYFunzo/ap-5b-backend#readme",
   "dependencies": {
-    "@prisma/client": "^6.16.3",
+    "@prisma/client": "^6.17.1",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
     "swagger-jsdoc": "^6.2.8",
@@ -62,13 +63,14 @@
     "@types/supertest": "^6.0.3",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
+    "cross-env": "^10.1.0",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "jest": "^30.2.0",
     "nodemon": "^3.1.10",
     "prettier": "3.6.2",
-    "prisma": "^6.16.3",
+    "prisma": "^6.17.1",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.4",
     "ts-node": "^10.9.2",

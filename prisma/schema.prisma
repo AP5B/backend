@@ -16,6 +16,7 @@ datasource db {
 enum UserRole {
   Student
   Teacher
+  Admin
 }
 
 enum ClassCategory {
@@ -35,14 +36,14 @@ enum ClassRequestState {
 
 model User {
   id              Int             @id @default(autoincrement())
-  username        String          @unique
-  first_name      String?
-  last_name_1     String?
-  last_name_2     String?
-  email           String          @unique
-  password        String
+  username        String          @unique @db.VarChar(20)
+  first_name      String          @db.VarChar(30)
+  last_name_1     String          @db.VarChar(30)
+  last_name_2     String?         @db.VarChar(30)
+  email           String          @unique @db.VarChar(60)
+  password        String          @db.VarChar(255)
   role            UserRole        @default(Student)
-  phone           String?
+  phone           String?         @db.VarChar(8)
   isDeleted       Boolean         @default(false)
   classOffers     ClassOffer[]
   classRequests   ClassRequest[]
@@ -61,6 +62,7 @@ model ClassOffer {
   createdAt      DateTime        @default(now()) @db.Timestamp(0)
   category       ClassCategory   @default(Otro)
   classRequests  ClassRequest[]
+  isDeleted      Boolean         @default(false)
 }
 
 model ClassRequest {

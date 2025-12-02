@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { authenticate, autorize } from "../middlewares/authMiddleware";
+import {
+  authenticate,
+  autorize,
+  checkUserIsDeleted,
+} from "../middlewares/authMiddleware";
 import {
   getAvailabilityController,
   createAvailabilitiesController,
@@ -201,6 +205,7 @@ router.get("/:teacherId", getAvailabilityController);
 router.post(
   "/",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   createAvailabilitiesController,
 );
@@ -262,6 +267,11 @@ router.post(
  *             schema:
  *               $ref: "#/components/schemas/systemError"
  */
-router.delete("/", authenticate, deleteAvailabilityController);
+router.delete(
+  "/",
+  authenticate,
+  checkUserIsDeleted,
+  deleteAvailabilityController,
+);
 
 export default router;
