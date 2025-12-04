@@ -109,7 +109,10 @@ export const registerUserController = async (req: Request, res: Response) => {
       ? reqBody.last_name_2.trim()
       : null;
 
-  const registBody = { ...rest, email: norm_email, last_name_2: normalizedLastName2 };
+  const registBody =
+    normalizedLastName2 == null
+      ? { ...rest, email: norm_email }
+      : { ...rest, email: norm_email, last_name_2: normalizedLastName2 };
 
   const newUser = await registerUserService(registBody);
 
