@@ -12,7 +12,7 @@ export interface registerRequestBody {
   username: string;
   first_name: string;
   last_name_1: string;
-  last_name_2?: string;
+  last_name_2?: string | null;
   email: string;
   password: string;
   role?: UserRole;
@@ -29,7 +29,8 @@ export const registerUserService = async (
     const userData = { ...regBody, password: hashedPassword };
 
     const newUser = await prisma.user.create({
-      data: userData,
+      // cast to any because request body may contain nullable optional fields
+      data: userData as any,
     });
 
     return newUser;

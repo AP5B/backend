@@ -13,6 +13,7 @@ import cookieParser from "cookie-parser";
 import env from "./config/env";
 import reviewsRoutes from "./routes/reviewsRoutes";
 import classRequestRoutes from "./routes/classRequestRoutes";
+import profileRoutes from "./routes/profileRoutes";
 
 
 // Swagger setup
@@ -63,6 +64,7 @@ export const createApp = () => {
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // Swagger
   app.use("/reviews/", reviewsRoutes);
   app.use("/class-requests/", classRequestRoutes);
+  app.use("/profile/", profileRoutes)
 
   app.use(errorHandler);
   return app;

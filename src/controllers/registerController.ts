@@ -104,7 +104,12 @@ export const registerUserController = async (req: Request, res: Response) => {
   const norm_email = reqBody.email.trim().toLowerCase();
 
   const { confirm_password: _ignore, ...rest } = reqBody;
-  const registBody = { ...rest, email: norm_email };
+  const normalizedLastName2 =
+    typeof reqBody.last_name_2 === "string" && reqBody.last_name_2.trim() !== ""
+      ? reqBody.last_name_2.trim()
+      : null;
+
+  const registBody = { ...rest, email: norm_email, last_name_2: normalizedLastName2 };
 
   const newUser = await registerUserService(registBody);
 
