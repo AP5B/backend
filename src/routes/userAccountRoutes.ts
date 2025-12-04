@@ -1,10 +1,18 @@
 import { Router } from "express";
-import { authenticate } from "../middlewares/authMiddleware";
+import {
+  authenticate,
+  checkUserIsDeleted,
+} from "../middlewares/authMiddleware";
 import { deleteUserAccountController } from "../controllers/userAccountController";
 
 const router = Router();
 
-router.patch("/delete", authenticate, deleteUserAccountController);
+router.patch(
+  "/delete",
+  authenticate,
+  checkUserIsDeleted,
+  deleteUserAccountController,
+);
 /**
  * @swagger
  * /user-account/delete:
