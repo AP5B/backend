@@ -19,12 +19,21 @@ export const createReviewService = async (
   reviewerId: number,
 ) => {
   try {
+    if (teacherId === reviewerId) {
+      throw new HttpError(403, "No puedes dejar una review sobre ti mismo.");
+    }
+
     const teacher = await prisma.user.findUnique({
       where: { id: teacherId, role: "Teacher" },
+      select: { isDeleted: true },
     });
 
     if (!teacher) {
       throw new HttpError(404, `Tutor no encontrado.`);
+    }
+
+    if (teacher.isDeleted === true) {
+      throw new HttpError(403, "La cuenta del profesor fue suspendida.");
     }
 
     const review = await prisma.review.findFirst({
@@ -70,10 +79,15 @@ export const getTeacherReviewsService = async (
     const offset = (page - 1) * limit;
     const teacher = await prisma.user.findUnique({
       where: { id: teacherId, role: "Teacher" },
+      select: { isDeleted: true },
     });
 
     if (!teacher) {
       throw new HttpError(404, `Tutor no encontrado.`);
+    }
+
+    if (teacher.isDeleted === true) {
+      throw new HttpError(403, "La cuenta del profesor fue suspendida.");
     }
 
     const reviews = await prisma.review.findMany({
@@ -81,14 +95,21 @@ export const getTeacherReviewsService = async (
         teacherId: teacherId,
       },
       include: {
-        reviewer: { select: { username: true } },
+        reviewer: { select: { username: true, isDeleted: true } },
       },
       skip: offset,
       take: limit,
     });
 
     const formatedReviews = reviews.map((rev) => {
-      return { ...rev, createdAt: rev.createdAt.toISOString().split("T")[0] };
+      const username =
+        rev.reviewer.isDeleted === true ? "Eliminado" : rev.reviewer.username;
+      const reviewer = { ...rev.reviewer, username: username };
+      return {
+        ...rev,
+        reviewer: reviewer,
+        createdAt: rev.createdAt.toISOString().split("T")[0],
+      };
     });
 
     return formatedReviews;
@@ -109,6 +130,9 @@ export const updateReviewService = async (
   try {
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
+      select: {
+        reviewerId: true,
+      },
     });
 
     if (!review) {
@@ -145,6 +169,7 @@ export const deleteReviewService = async (reviewId: number, userId: number) => {
   try {
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
+      select: { reviewerId: true },
     });
 
     if (!review) {
@@ -176,12 +201,19 @@ export const getCurrentUserReviewsService = async (
       skip: offset,
       take: limit,
       include: {
-        reviewer: { select: { username: true } },
+        reviewer: { select: { username: true, isDeleted: true } },
       },
     });
 
     const formatedReviews = myReviews.map((rev) => {
-      return { ...rev, createdAt: rev.createdAt.toISOString().split("T")[0] };
+      const username =
+        rev.reviewer.isDeleted === true ? "Eliminado" : rev.reviewer.username;
+      const reviewer = { ...rev.reviewer, username: username };
+      return {
+        ...rev,
+        reviewer: reviewer,
+        createdAt: rev.createdAt.toISOString().split("T")[0],
+      };
     });
 
     return formatedReviews;

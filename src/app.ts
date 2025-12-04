@@ -13,8 +13,8 @@ import cookieParser from "cookie-parser";
 import env from "./config/env";
 import reviewsRoutes from "./routes/reviewsRoutes";
 import classRequestRoutes from "./routes/classRequestRoutes";
-import profileRoutes from "./routes/profileRoutes";
-
+import userAccountRoutes from "./routes/userAccountRoutes";
+import { limiter, authLimiter } from "./utils/rateLimiters";
 
 // Swagger setup
 const options = {
@@ -33,11 +33,12 @@ const swaggerSpec = swaggerJSDoc(options);
 export const createApp = () => {
   const app = express();
 
+  const isTest = process.env.NODE_ENV === "test";
   const allowedOrigins = env.allowedOrigins?.split(",") || [];
 
   app.use(
     cors({
-      origin: function(origin, callback) {
+      origin: function (origin, callback) {
         if (!origin) return callback(null, true);
 
         if (allowedOrigins.indexOf(origin) === -1) {
@@ -57,14 +58,23 @@ export const createApp = () => {
 
   app.use("/", exampleRoutes);
   app.use("/", healthRoutes);
-  app.use("/", registerRoutes);
-  app.use("/", loginRoutes);
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // Swagger
+
+  if (!isTest) {
+    app.use(limiter);
+    app.use("/", authLimiter, registerRoutes);
+    app.use("/", authLimiter, loginRoutes);
+  } else {
+    console.log("Rate limit deshabilitado para testing");
+    app.use("/", registerRoutes);
+    app.use("/", loginRoutes);
+  }
+
   app.use("/class-offer/", classRoutes);
   app.use("/availability/", availabilityRoutes);
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // Swagger
   app.use("/reviews/", reviewsRoutes);
   app.use("/class-requests/", classRequestRoutes);
-  app.use("/profile/", profileRoutes)
+  app.use("/user-account/", userAccountRoutes);
 
   app.use(errorHandler);
   return app;

@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { authenticate, autorize } from "../middlewares/authMiddleware";
+import {
+  authenticate,
+  autorize,
+  checkUserIsDeleted,
+} from "../middlewares/authMiddleware";
 import {
   createReviewController,
   getTeacherReviewsController,
@@ -10,7 +14,12 @@ import {
 
 const router = Router();
 
-router.get("/user", authenticate, getCurrentUserReviewsController);
+router.get(
+  "/user",
+  authenticate,
+  checkUserIsDeleted,
+  getCurrentUserReviewsController,
+);
 /**
  * @swagger
  * /reviews/user:
@@ -76,6 +85,9 @@ router.get("/user", authenticate, getCurrentUserReviewsController);
  *                         properties:
  *                           username:
  *                             type: string
+ *                           isDeleted:
+ *                             type: bool
+ *                             example: false
  *       401:
  *         description: No autorizado. El token JWT es inválido o no fue proporcionado.
  *         content:
@@ -101,6 +113,7 @@ router.get("/user", authenticate, getCurrentUserReviewsController);
 router.post(
   "/:teacherId",
   authenticate,
+  checkUserIsDeleted,
   autorize("Student"),
   createReviewController,
 );
@@ -194,6 +207,17 @@ router.post(
  *                 message:
  *                   type: string
  *                   example: Autenticación fallida
+ *       403:
+ *         description: Cuenta del profesor eliminada, la cuenta del autor de la review fue eliminada o el usuario intenta dejar una review sobre si mismo.
+ *         content:
+ *           aplication/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La cuenta del profesor fue suspendida. || Operación denegada, tu cuenta fue suspendida || No puedes dejar una review sobre ti mismo.
+ *
  *       404:
  *         description: Tutor no encontrado
  *         content:
@@ -288,6 +312,9 @@ router.get("/:teacherId", getTeacherReviewsController);
  *                         properties:
  *                           username:
  *                             type: string
+ *                           isDeleted:
+ *                             type: bool
+ *                             example: false
  *       400:
  *         description: Faltan parámetros o el ID del tutor no fue proporcionado correctamente.
  *         content:
@@ -298,6 +325,16 @@ router.get("/:teacherId", getTeacherReviewsController);
  *                 message:
  *                   type: string
  *                   example: Id del tutor faltante.
+ *       403:
+ *         description: Cuenta del profesor eliminada.
+ *         content:
+ *           aplication/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La cuenta del profesor fue suspendida.
  *       404:
  *         description: Tutor no encontrado.
  *         content:
@@ -323,6 +360,7 @@ router.get("/:teacherId", getTeacherReviewsController);
 router.patch(
   "/:reviewId",
   authenticate,
+  checkUserIsDeleted,
   autorize("Student"),
   updateReviewController,
 );
@@ -416,6 +454,16 @@ router.patch(
  *                 message:
  *                   type: string
  *                   example: El recurso no le pertenece al usuario actual.
+ *       403:
+ *         description: La cuenta del autor de la review fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Operación denegada, tu cuenta fue suspendida.
  *       404:
  *         description: Review no encontrada.
  *         content:
@@ -438,7 +486,12 @@ router.patch(
  *                   example: Error interno del servidor.
  */
 
-router.delete("/:reviewId", authenticate, deleteReviewController);
+router.delete(
+  "/:reviewId",
+  authenticate,
+  checkUserIsDeleted,
+  deleteReviewController,
+);
 /**
  * @swagger
  * /reviews/{reviewId}:
