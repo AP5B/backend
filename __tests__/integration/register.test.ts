@@ -162,7 +162,7 @@ describe("Register endpoints", () => {
       expect(res.status).toBe(400);
       expect(res.body).toHaveProperty(
         "message",
-        "El nombre de usuario debe tener entre 5 y 20 caracteres.",
+        "El nombre de usuario debe tener entre 3 y 20 caracteres.",
       );
     });
 
@@ -185,7 +185,7 @@ describe("Register endpoints", () => {
       expect(res.status).toBe(400);
       expect(res.body).toHaveProperty(
         "message",
-        "El nombre de usuario debe tener entre 5 y 20 caracteres.",
+        "El nombre de usuario debe tener entre 3 y 20 caracteres.",
       );
     });
 
