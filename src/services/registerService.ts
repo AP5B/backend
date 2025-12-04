@@ -29,8 +29,7 @@ export const registerUserService = async (
     const userData = { ...regBody, password: hashedPassword };
 
     const newUser = await prisma.user.create({
-      // cast to any because request body may contain nullable optional fields
-      data: userData as any,
+      data: userData,
     });
 
     return newUser;
