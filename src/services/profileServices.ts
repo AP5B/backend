@@ -4,58 +4,86 @@ import { HttpError } from "../middlewares/errorHandler";
 const prisma = PrismaManager.GetClient();
 
 export const changeUserPassword = async (
-	userId: number,
-	currentPassword: string,
-	newPassword: string,
+  userId: number,
+  currentPassword: string,
+  newPassword: string,
 ) => {
-	const user = await prisma.user.findUnique({ where: { id: userId } });
-	if (!user) throw new HttpError(404, "Usuario no encontrado.");
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId, isDeleted: false },
+      select: { id: true, password: true },
+    });
 
-	const passwordMatch = await bcrypt.compare(currentPassword, user.password);
-	if (!passwordMatch) throw new HttpError(401, "Contraseña actual incorrecta.");
+    if (!user) throw new HttpError(404, "Usuario no encontrado.");
 
-	const hashed = await bcrypt.hash(newPassword, 10);
+    if (userId !== user.id) {
+      throw new HttpError(
+        401,
+        "No estas autorizado para modificar la información este usuario.",
+      );
+    }
 
-	const updated = await prisma.user.update({
-		where: { id: userId },
-		data: { password: hashed },
-	});
+    const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!passwordMatch)
+      throw new HttpError(401, "Contraseña actual incorrecta.");
 
-	const { password: _pw, ...safe } = updated;
-	return safe;
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashed },
+    });
+
+    const { password: _pw, ...safe } = updated;
+
+    return safe;
+  } catch (error) {
+    console.log(error);
+    if (error instanceof HttpError) throw error;
+    throw new HttpError(500, `Error interno del servidor:\n${error}`);
+  }
 };
 
 export const updateUserNames = async (
-	userId: number,
-	currentPassword: string,
-	names: {
-		first_name?: string;
-		last_name_1?: string;
-		last_name_2?: string | null;
-		phone?: string | null;
-	},
+  userId: number,
+  currentPassword: string,
+  data: {
+    first_name?: string;
+    last_name_1?: string;
+    last_name_2?: string | null;
+    phone?: string | null;
+  },
 ) => {
-	const user = await prisma.user.findUnique({ where: { id: userId } });
-	if (!user) throw new HttpError(404, "Usuario no encontrado.");
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId, isDeleted: false },
+      select: { id: true, password: true },
+    });
 
-	const passwordMatch = await bcrypt.compare(currentPassword, user.password);
-	if (!passwordMatch) throw new HttpError(401, "Contraseña actual incorrecta.");
+    if (!user) throw new HttpError(404, "Usuario no encontrado.");
 
-	const data: any = {};
-	if (typeof names.first_name !== "undefined") data.first_name = names.first_name;
-	if (typeof names.last_name_1 !== "undefined") data.last_name_1 = names.last_name_1;
-	if (typeof names.last_name_2 !== "undefined") data.last_name_2 = names.last_name_2;
-	if (typeof names.phone !== "undefined") data.phone = names.phone;
+    if (userId !== user.id) {
+      throw new HttpError(
+        401,
+        "No estas autorizado para modificar la información este usuario.",
+      );
+    }
 
-	if (Object.keys(data).length === 0) {
-		throw new HttpError(400, "No se proporcionaron campos para actualizar.");
-	}
+    const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!passwordMatch)
+      throw new HttpError(401, "Contraseña actual incorrecta.");
 
-	const updated = await prisma.user.update({
-		where: { id: userId },
-		data,
-	});
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data,
+    });
 
-	const { password: _pw, ...safe } = updated;
-	return safe;
+    const { password: _pw, ...safe } = updated;
+
+    return safe;
+  } catch (error) {
+    console.log(error);
+    if (error instanceof HttpError) throw error;
+    throw new HttpError(500, `Error interno del servidor:\n${error}`);
+  }
 };
