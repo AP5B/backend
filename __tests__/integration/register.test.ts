@@ -147,7 +147,7 @@ describe("Register endpoints", () => {
       if (!testServer || !prisma) return;
 
       const data = {
-        username: "test",
+        username: "te",
         first_name: "Juan",
         last_name_1: "Pérez",
         last_name_2: "López",
