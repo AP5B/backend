@@ -87,3 +87,32 @@ export const updateUserNames = async (
     throw new HttpError(500, `Error interno del servidor:\n${error}`);
   }
 };
+
+export const getUserProfileService = async (userId: number) => {
+  try {
+    const userProfile = await prisma.user.findUnique({
+      where: { id: userId, isDeleted: false },
+      select: {
+        id: true,
+        username: true,
+        first_name: true,
+        last_name_1: true,
+        last_name_2: true,
+        email: true,
+        phone: true,
+        isDeleted: true,
+        role: true,
+      },
+    });
+
+    if (!userProfile) {
+      throw new HttpError(404, "Perfil del usuario no encontrado.");
+    }
+
+    return userProfile;
+  } catch (error) {
+    console.log(error);
+    if (error instanceof HttpError) throw error;
+    throw new HttpError(500, `Error interno del servidor:\n${error}`);
+  }
+};

@@ -6,6 +6,7 @@ import {
 import {
   changePasswordController,
   updateNamesController,
+  getUserProfileController,
 } from "../controllers/profileController";
 
 const router = Router();
@@ -245,5 +246,105 @@ router.patch(
  *         description: Error interno del servidor.
  */
 router.patch("/names", authenticate, checkUserIsDeleted, updateNamesController);
+
+/**
+ * @swagger
+ * /profile/{userId}:
+ *   get:
+ *     summary: Obtener el perfil público de un usuario
+ *     description: >
+ *       Obtiene la información pública del perfil de un usuario según su ID.
+ *       No requiere autenticación.
+ *       Si el usuario no existe o está eliminado, retornará un error 404.
+ *     tags:
+ *       - User Profile
+ *
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del usuario cuyo perfil se desea obtener.
+ *         example: 42
+ *
+ *     responses:
+ *       200:
+ *         description: Perfil de usuario obtenido con éxito.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Perfil del usuario obtenido con éxito"
+ *                 userProfile:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     username:
+ *                       type: string
+ *                     first_name:
+ *                       type: string
+ *                     last_name_1:
+ *                       type: string
+ *                     last_name_2:
+ *                       type: string
+ *                       nullable: true
+ *                     email:
+ *                       type: string
+ *                     phone:
+ *                       type: string
+ *                       nullable: true
+ *                     role:
+ *                       type: string
+ *                       enum: [Student, Teacher]
+ *                     isDeleted:
+ *                       type: boolean
+ *                   example:
+ *                     id: 42
+ *                     username: "juanperez"
+ *                     first_name: "Juan"
+ *                     last_name_1: "Pérez"
+ *                     last_name_2: "Gómez"
+ *                     email: "juan@uc.cl"
+ *                     phone: "98765432"
+ *                     role: "Student"
+ *                     isDeleted: false
+ *
+ *       400:
+ *         description: Parámetro userId faltante o inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *               example:
+ *                 message: "Id del usuario faltante."
+ *
+ *       404:
+ *         description: El perfil del usuario no existe o el usuario fue eliminado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *               example:
+ *                 message: "Perfil del usuario no encontrado."
+ *
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/systemError"
+ */
+router.get("/:userId", getUserProfileController);
 
 export default router;

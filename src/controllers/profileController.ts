@@ -3,6 +3,7 @@ import { HttpError } from "../middlewares/errorHandler";
 import {
   changeUserPassword,
   updateUserNames,
+  getUserProfileService,
 } from "../services/profileServices";
 
 interface ChangePasswordBody {
@@ -123,4 +124,19 @@ export const updateNamesController = async (req: Request, res: Response) => {
   res
     .status(200)
     .json({ message: "Datos actualizados con éxito.", user: updatedUser });
+};
+
+export const getUserProfileController = async (req: Request, res: Response) => {
+  const userId = parseInt(req.params.userId as string);
+
+  if (!userId) {
+    throw new HttpError(400, "Id del usuario faltante.");
+  }
+
+  const userProfile = await getUserProfileService(userId);
+
+  res.status(200).json({
+    message: "Perfil del usuario obtenido con éxito",
+    userProfile,
+  });
 };
