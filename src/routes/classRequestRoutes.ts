@@ -6,6 +6,7 @@ import {
   updateClassRequestStateController,
   getClassRequestsByClassController,
   getClassRequestByIdController,
+  getUserReqInClassOfferController,
 } from "../controllers/classRequestController";
 import {
   authenticate,
@@ -836,6 +837,113 @@ router.get(
   checkUserIsDeleted,
   autorize("Student"),
   getClassRequestByIdController,
+);
+
+/**
+ * @swagger
+ * /class-requests/{classOfferId}/me:
+ *   get:
+ *     summary: Obtener las reservas del usuario autenticado en una clase específica
+ *     description: >
+ *       Devuelve todas las reservas realizadas por el estudiante autenticado
+ *       para una clase en particular (`classOfferId`).
+ *
+ *       El usuario debe estar autenticado, su cuenta no debe estar suspendida
+ *       y debe tener el rol **Student**.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classOfferId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la oferta de clase en la cual el usuario realizó reservas.
+ *     responses:
+ *       200:
+ *         description: Reservas del usuario obtenidas correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Reservas del usuario obtenidas con éxito"
+ *                 classReqs:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       day:
+ *                         type: integer
+ *                         example: 3
+ *                       slot:
+ *                         type: integer
+ *                         example: 14
+ *                       createdAt:
+ *                         type: string
+ *                         example: "2025-01-20"
+ *                       state:
+ *                         type: string
+ *                         example: "Pending"
+ *                       classOffer:
+ *                         type: object
+ *                         properties:
+ *                           title:
+ *                             type: string
+ *                           price:
+ *                             type: number
+ *                           category:
+ *                             type: string
+ *                           isDeleted:
+ *                             type: boolean
+ *                             example: false
+ *                           author:
+ *                             type: object
+ *                             properties:
+ *                               username:
+ *                                 type: string
+ *                               first_name:
+ *                                 type: string
+ *                               last_name_1:
+ *                                 type: string
+ *                               isDeleted:
+ *                                 type: boolean
+ *                                 example: false
+ *       400:
+ *         description: ID de la clase faltante o inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "ID de la clase faltante."
+ *       401:
+ *         description: Autenticación fallida (token faltante, inválido o expirado).
+ *       403:
+ *         description: La cuenta del usuario autenticado está suspendida o rol no permitido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Operación denegada, tu cuenta fue suspendida."
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.get(
+  "/:classOfferId/me",
+  authenticate,
+  checkUserIsDeleted,
+  autorize("Student"),
+  getUserReqInClassOfferController,
 );
 
 export default router;

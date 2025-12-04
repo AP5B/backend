@@ -23,10 +23,10 @@ const validateRegisterBody = (body: registerRequestBody) => {
   // Username
   if (!username)
     throw new HttpError(400, "El nombre de usuario no puede estar vacío.");
-  if (username.length < 5 || username.length > 20)
+  if (username.length < 3 || username.length > 20)
     throw new HttpError(
       400,
-      "El nombre de usuario debe tener entre 5 y 20 caracteres.",
+      "El nombre de usuario debe tener entre 3 y 20 caracteres.",
     );
   if (!usernameRegex.test(username))
     throw new HttpError(

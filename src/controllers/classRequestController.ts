@@ -8,6 +8,7 @@ import {
   updateClassRequestStateService,
   getClassRequestsByClassService,
   getClassRequestByIdService,
+  getUserReqInClassOfferService,
 } from "../services/classRequestService";
 
 /**
@@ -187,4 +188,23 @@ export const getClassRequestByIdController = async (
   const classReq = await getClassRequestByIdService(classRequestId);
 
   return res.status(200).json({ classReq });
+};
+
+export const getUserReqInClassOfferController = async (
+  req: Request,
+  res: Response,
+) => {
+  const userId = parseInt(res.locals.user.id as string);
+  const classOfferId = parseInt(req.params.classOfferId as string);
+
+  if (!classOfferId) {
+    throw new HttpError(400, "ID de la clase faltante.");
+  }
+
+  const classReqs = await getUserReqInClassOfferService(userId, classOfferId);
+
+  return res.status(200).json({
+    message: "Reservas del usuario obtenidas con éxito",
+    classReqs,
+  });
 };
