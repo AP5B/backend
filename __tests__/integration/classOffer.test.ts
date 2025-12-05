@@ -173,6 +173,32 @@ describe("Class Offer endpoints", () => {
       });
     });
 
+    it("Should return 400 if the title is full of numbers", async () => {
+      if (!testServer || !prisma || !testTeacherUser) return;
+
+      const response = await teacherAgent
+        .post("/class-offer")
+        .send({ ...validPayload, title: "123214234" });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        "El titulo no puede estar constituido solo por números.",
+      );
+    });
+
+    it("Should return 400 if the description is full of numbers", async () => {
+      if (!testServer || !prisma || !testTeacherUser) return;
+
+      const response = await teacherAgent
+        .post("/class-offer")
+        .send({ ...validPayload, description: "123214234" });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        "La descripción no puede estar constituida solo por números.",
+      );
+    });
+
     it("Should return 401 if the user is not a teacher", async () => {
       if (!testServer || !prisma) return;
 
@@ -439,6 +465,44 @@ describe("Class Offer endpoints", () => {
         description: newValues.description,
         price: newValues.price,
       });
+    });
+
+    it("Should return 400 if the title is full of number", async () => {
+      if (!classOfferToEdit) return;
+
+      const newValues = {
+        title: "123213214",
+        description: "Nueva descripción",
+        price: 50000,
+      };
+
+      const response = await teacherAgent
+        .patch(`/class-offer/${classOfferToEdit.id}`)
+        .send(newValues);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        "El titulo no puede estar constituido solo por números.",
+      );
+    });
+
+    it("Should return 400 if the title is full of number", async () => {
+      if (!classOfferToEdit) return;
+
+      const newValues = {
+        title: "Nuevo título",
+        description: "12323434",
+        price: 50000,
+      };
+
+      const response = await teacherAgent
+        .patch(`/class-offer/${classOfferToEdit.id}`)
+        .send(newValues);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        "La descripción no puede estar constituida solo por números.",
+      );
     });
   });
 });

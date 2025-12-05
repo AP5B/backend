@@ -131,7 +131,7 @@ describe("Review endpoints", () => {
         },
       });
 
-      const payload = { rating: 4, content: "Excelente profesor" };
+      const payload = { rating: 4, content: "Excelente profesor, 10/10" };
       const response = await studentAgent
         .post(`/reviews/${testTeacherUser.id}`)
         .send(payload);
@@ -140,6 +140,27 @@ describe("Review endpoints", () => {
       expect(response.body.review).toMatchObject({
         rating: payload.rating,
         content: payload.content,
+      });
+    });
+
+    it("Should create a review successfully with rating only", async () => {
+      if (!testStudentUser || !testTeacherUser || !prisma) return;
+
+      await prisma.review.deleteMany({
+        where: {
+          reviewerId: testStudentUser.id,
+          teacherId: testTeacherUser.id,
+        },
+      });
+
+      const payload = { rating: 4 };
+      const response = await studentAgent
+        .post(`/reviews/${testTeacherUser.id}`)
+        .send(payload);
+
+      expect(response.status).toBe(200);
+      expect(response.body.review).toMatchObject({
+        rating: payload.rating,
       });
     });
 
@@ -166,6 +187,48 @@ describe("Review endpoints", () => {
         .send(payload);
 
       expect(response.status).toBe(400);
+    });
+
+    it("Should return 400 if the content of the review is full of numbers", async () => {
+      if (!testStudentUser || !testTeacherUser || !prisma) return;
+
+      await prisma.review.deleteMany({
+        where: {
+          reviewerId: testStudentUser.id,
+          teacherId: testTeacherUser.id,
+        },
+      });
+
+      const payload = { rating: 4, content: "2324234325435" };
+      const response = await studentAgent
+        .post(`/reviews/${testTeacherUser.id}`)
+        .send(payload);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        "Formato del cuerpo de la review inválido.",
+      );
+    });
+
+    it("Should return 400 if the content of the review is full of blank space", async () => {
+      if (!testStudentUser || !testTeacherUser || !prisma) return;
+
+      await prisma.review.deleteMany({
+        where: {
+          reviewerId: testStudentUser.id,
+          teacherId: testTeacherUser.id,
+        },
+      });
+
+      const payload = { rating: 4, content: "        " };
+      const response = await studentAgent
+        .post(`/reviews/${testTeacherUser.id}`)
+        .send(payload);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        "Formato del cuerpo de la review inválido.",
+      );
     });
   });
 

@@ -7,6 +7,24 @@ import {
 } from "../services/registerService";
 import { generateTokens, setAuthCookies } from "../utils/setAuthCookies";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export function deepTrim<T extends Record<string, any>>(obj: T): T {
+  const cleaned: any = {};
+
+  for (const key in obj) {
+    const value = obj[key];
+
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      cleaned[key] = trimmed === "" ? null : trimmed;
+    } else {
+      cleaned[key] = value;
+    }
+  }
+  return cleaned;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 const validateRegisterBody = (body: registerRequestBody) => {
   const usernameRegex = /^[a-z0-9_]+$/;
   const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
@@ -23,7 +41,7 @@ const validateRegisterBody = (body: registerRequestBody) => {
   // Username
   if (!username)
     throw new HttpError(400, "El nombre de usuario no puede estar vacío.");
-  if (username.length < 3 || username.length > 20)
+  if (username.trim().length < 3 || username.trim().length > 20)
     throw new HttpError(
       400,
       "El nombre de usuario debe tener entre 3 y 20 caracteres.",
@@ -36,7 +54,7 @@ const validateRegisterBody = (body: registerRequestBody) => {
 
   // Nombre
   if (!firstName) throw new HttpError(400, "El nombre no puede estar vacío.");
-  if (firstName.length < 3 || firstName.length > 30)
+  if (firstName.trim().length < 3 || firstName.trim().length > 30)
     throw new HttpError(400, "El nombre debe tener entre 3 y 30 caracteres.");
   if (!nameRegex.test(firstName))
     throw new HttpError(
@@ -47,7 +65,7 @@ const validateRegisterBody = (body: registerRequestBody) => {
   // Primer apellido
   if (!firstLastName)
     throw new HttpError(400, "El primer apellido no puede estar vacío.");
-  if (firstLastName.length < 3 || firstLastName.length > 30)
+  if (firstLastName.trim().length < 3 || firstLastName.trim().length > 30)
     throw new HttpError(
       400,
       "El primer apellido debe tener entre 3 y 30 caracteres.",
@@ -60,7 +78,7 @@ const validateRegisterBody = (body: registerRequestBody) => {
 
   // Segundo apellido (opcional)
   if (secondLastName) {
-    if (secondLastName.length < 3 || secondLastName.length > 30)
+    if (secondLastName.trim().length < 3 || secondLastName.trim().length > 30)
       throw new HttpError(
         400,
         "El segundo apellido debe tener entre 3 y 30 caracteres.",
@@ -74,7 +92,7 @@ const validateRegisterBody = (body: registerRequestBody) => {
 
   // Email
   if (!email) throw new HttpError(400, "El email no puede estar vacío.");
-  if (email.length > 60)
+  if (email.trim().length > 60)
     throw new HttpError(400, "El email no puede tener más de 60 caracteres.");
   if (!emailRegex.test(email))
     throw new HttpError(400, "El email no tiene un formato válido.");
@@ -97,7 +115,7 @@ const validateRegisterBody = (body: registerRequestBody) => {
 };
 
 export const registerUserController = async (req: Request, res: Response) => {
-  const reqBody = req.body as registerRequestBody;
+  const reqBody = deepTrim(req.body as registerRequestBody);
 
   validateRegisterBody(reqBody);
 
