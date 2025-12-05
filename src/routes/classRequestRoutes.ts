@@ -7,6 +7,7 @@ import {
   getClassRequestsByClassController,
   getClassRequestByIdController,
   getUserReqInClassOfferController,
+  deleteClassRequestController,
 } from "../controllers/classRequestController";
 import {
   authenticate,
@@ -944,6 +945,95 @@ router.get(
   checkUserIsDeleted,
   autorize("Student"),
   getUserReqInClassOfferController,
+);
+
+/**
+ * @swagger
+ * /class-requests/{classRequestId}:
+ *   delete:
+ *     summary: Eliminar una reserva hecha por el usuario autenticado
+ *     description: |
+ *       Permite a un estudiante eliminar una reserva previamente realizada.
+ *       Solo el dueño de la reserva puede eliminarla.
+ *       Si la reserva no existe o pertenece a otro usuario, se retornará un error.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classRequestId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la reserva que se desea eliminar.
+ *     responses:
+ *       200:
+ *         description: Reserva eliminada exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Reserva eliminada con éxito.
+ *       400:
+ *         description: El ID de la reserva es inválido o está ausente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Id de la reserva faltante.
+ *       401:
+ *         description: El usuario no está autenticado o intenta eliminar una reserva que no le pertenece.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: El recurso no le pertenece al usuario actual.
+ *       403:
+ *         description: El usuario autenticado está eliminado (lógica de soft delete).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La cuenta del usuario se encuentra eliminada.
+ *       404:
+ *         description: La reserva especificada no existe.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Reserva a eliminar no encontrada.
+ *       500:
+ *         description: Error interno en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error interno del servidor.
+ */
+router.delete(
+  "/:classRequestId",
+  authenticate,
+  checkUserIsDeleted,
+  deleteClassRequestController,
 );
 
 export default router;

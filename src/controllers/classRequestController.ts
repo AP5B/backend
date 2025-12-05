@@ -9,6 +9,7 @@ import {
   getClassRequestsByClassService,
   getClassRequestByIdService,
   getUserReqInClassOfferService,
+  deleteClassRequestService,
 } from "../services/classRequestService";
 
 /**
@@ -206,5 +207,23 @@ export const getUserReqInClassOfferController = async (
   return res.status(200).json({
     message: "Reservas del usuario obtenidas con éxito",
     classReqs,
+  });
+};
+
+export const deleteClassRequestController = async (
+  req: Request,
+  res: Response,
+) => {
+  const userId = parseInt(res.locals.user.id as string);
+  const classRequestId = parseInt(req.params.classRequestId as string);
+
+  if (!classRequestId) {
+    throw new HttpError(400, "Id de la reserva faltante.");
+  }
+
+  await deleteClassRequestService(userId, classRequestId);
+
+  return res.status(200).json({
+    message: "Reserva eliminada con éxito.",
   });
 };
