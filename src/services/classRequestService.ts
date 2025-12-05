@@ -514,3 +514,31 @@ export const getUserReqInClassOfferService = async (
     throw new HttpError(500, `Error interno del servidor: ${error}`);
   }
 };
+
+export const deleteClassRequestService = async (
+  userId: number,
+  classRequestId: number,
+) => {
+  try {
+    const classRequest = await prisma.classRequest.findUnique({
+      where: { id: classRequestId },
+      select: { userId: true },
+    });
+
+    if (!classRequest) {
+      throw new HttpError(404, "Reserva a eliminar no encontrada.");
+    }
+
+    if (userId !== classRequest.userId) {
+      throw new HttpError(401, `El recurso no le pertenece al usuario actual.`);
+    }
+
+    await prisma.classRequest.delete({
+      where: { id: classRequestId },
+    });
+  } catch (error) {
+    console.error(error);
+    if (error instanceof HttpError) throw error;
+    throw new HttpError(500, `Error interno del servidor: ${error}`);
+  }
+};
