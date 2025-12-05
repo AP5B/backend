@@ -30,7 +30,7 @@ enum ClassCategory {
 enum ClassRequestState {
   Created
   PaymentPending
-  Pending
+  Paid
   Approved
   Rejected
   PaymentRefunded

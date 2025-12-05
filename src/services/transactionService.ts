@@ -465,7 +465,7 @@ export const redirectHandlerService = async (
   await prisma.classRequest.update({
     where: { id: classRequestId },
     data: {
-      state: ClassRequestState.Pending,
+      state: ClassRequestState.Paid,
     },
   });
 };
