@@ -11,6 +11,7 @@ import {
   authenticate,
   autorize,
   optionalAuthenticate,
+  checkUserIsDeleted,
 } from "../middlewares/authMiddleware";
 
 const router = Router();
@@ -311,6 +312,16 @@ router.get("/", getClassOffersController);
  *                 message:
  *                   type: string
  *                   example: Usuario no tiene rol Teacher
+ *       403:
+ *         description: La cuenta de el usuario que realiza la petición fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Operación denegada, tu cuenta fue suspendida.
  *       500:
  *         description: Error interno del servidor.
  *         content:
@@ -326,6 +337,7 @@ router.get("/", getClassOffersController);
 router.get(
   "/me",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   getMyClassOffersController,
 );
@@ -383,6 +395,8 @@ router.get(
  *                 author:
  *                   type: object
  *                   properties:
+ *                     avgRating:
+ *                       type: number
  *                     id:
  *                       type: number
  *                     username:
@@ -420,6 +434,9 @@ router.get(
  *                             properties:
  *                               username:
  *                                 type: string
+ *                               isDeleted:
+ *                                 type: bool
+ *                                 example: false
  *       400:
  *         description: Error en los datos de entrada (ID inválida).
  *         content:
@@ -431,7 +448,7 @@ router.get(
  *                   type: string
  *                   example: La id, de la oferta de clase, debe ser un número.
  *       404:
- *         description: No se encontró la oferta de clase con el ID especificado.
+ *         description: No se encontró la oferta de clase con el ID especificado o fue eliminada.
  *         content:
  *           application/json:
  *             schema:
@@ -439,7 +456,7 @@ router.get(
  *               properties:
  *                 message:
  *                   type: string
- *                   example: No existe una oferta de clase con id {classId}
+ *                   example: Oferta de clase no encontrada.
  *       500:
  *         description: Error interno del servidor.
  *         content:
@@ -510,6 +527,16 @@ router.get("/:classId", optionalAuthenticate, getClassOfferByIdController);
  *                 message:
  *                   type: string
  *                   example: Usuario no tiene rol Teacher
+ *       403:
+ *         description: La cuenta del usuario que intenta crear la clase fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Operación denegada, tu cuenta fue suspendida.
  *       500:
  *         description: Error interno del servidor
  *         content:
@@ -521,7 +548,13 @@ router.get("/:classId", optionalAuthenticate, getClassOfferByIdController);
  *                   type: string
  *                   example: Error interno del servidor
  */
-router.post("/", authenticate, autorize("Teacher"), createClassOfferController);
+router.post(
+  "/",
+  authenticate,
+  checkUserIsDeleted,
+  autorize("Teacher"),
+  createClassOfferController,
+);
 
 /**
  * @swagger
@@ -583,6 +616,16 @@ router.post("/", authenticate, autorize("Teacher"), createClassOfferController);
  *                 message:
  *                   type: string
  *                   example: El recurso no pertenece al usuario.
+ *       403:
+ *         description: La cuenta del usuario que intenta editar la clase fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Operación denegada, tu cuenta fue suspendida.
  *       404:
  *         description: No se encontro la clase con id `classId`
  *         content:
@@ -607,6 +650,7 @@ router.post("/", authenticate, autorize("Teacher"), createClassOfferController);
 router.patch(
   "/:classId",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   editClassOfferController,
 );
@@ -661,6 +705,16 @@ router.patch(
  *                 message:
  *                   type: string
  *                   example: El recurso no pertenece al usuario.
+ *       403:
+ *         description: La cuenta del usuario que intenta borrar la clase fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Operación denegada, tu cuenta fue suspendida.
  *       404:
  *         description: No se encontro la clase con id `classId`.
  *         content:
@@ -685,6 +739,7 @@ router.patch(
 router.delete(
   "/:classId",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   deleteClassOfferController,
 );

@@ -7,8 +7,13 @@ import {
   getClassRequestsByClassController,
   confirmClassRequestController,
   acceptClassRequestController,
+  getClassRequestByIdController,
 } from "../controllers/classRequestController";
-import { authenticate, autorize } from "../middlewares/authMiddleware";
+import {
+  authenticate,
+  autorize,
+  checkUserIsDeleted,
+} from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -159,6 +164,9 @@ router.get(
  *                         category:
  *                           type: string
  *                           example: Deportes
+ *                         isDeleted:
+ *                           type: boolean
+ *                           example: false
  *                         author:
  *                           type: object
  *                           properties:
@@ -171,6 +179,9 @@ router.get(
  *                             last_name_1:
  *                               type: string
  *                               example: López
+ *                             isDeleted:
+ *                               type: boolean
+ *                               example: false
  *       400:
  *         description: Error en los datos enviados
  *         content:
@@ -181,6 +192,18 @@ router.get(
  *                 message:
  *                   type: string
  *                   example: "El campo 'slot' es requerido"
+ *       403:
+ *         description: |
+ *           La cuenta del usuario que realiza la solicitud fue eliminada o
+ *           el profesor intenta hacer una reserva en su propia clase.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Operación denegada, tu cuenta fue suspendida || No puedes hacer una reserva en tu propia clase"
  *       404:
  *         description: La clase especificada no existe
  *         content:
@@ -216,6 +239,7 @@ router.get(
 router.post(
   "/",
   authenticate,
+  checkUserIsDeleted,
   autorize("Student"),
   createReservationController,
 );
@@ -286,6 +310,9 @@ router.post(
  *                           category:
  *                             type: string
  *                             example: "Calculo"
+ *                           isDeleted:
+ *                             type: boolean
+ *                             example: false
  *                           author:
  *                             type: object
  *                             properties:
@@ -300,6 +327,9 @@ router.post(
  *                                 type: string
  *                                 nullable: true
  *                                 example: null
+ *                               isDeleted:
+ *                                 type: bool
+ *                                 example: false
  *       401:
  *         description: Usuario no autenticado o sin permisos
  *         content:
@@ -310,6 +340,16 @@ router.post(
  *                 message:
  *                   type: string
  *                   example: "Usuario no tiene rol Student"
+ *       403:
+ *         description: La cuenta del usuario que realiza la solicitud fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Operación denegada, tu cuenta fue suspendida"
  *       500:
  *         description: Error interno al obtener las reservas del usuario
  *         content:
@@ -324,6 +364,7 @@ router.post(
 router.get(
   "/me",
   authenticate,
+  checkUserIsDeleted,
   autorize("Student"),
   getUserClassRequestController,
 );
@@ -399,6 +440,9 @@ router.get(
  *                             type: string
  *                             nullable: true
  *                             example: "Pérez"
+ *                           isDeleted:
+ *                             type: bool
+ *                             example: false
  *                       classOffer:
  *                         type: object
  *                         properties:
@@ -411,6 +455,9 @@ router.get(
  *                           price:
  *                             type: number
  *                             example: 15000
+ *                           isDeleted:
+ *                             type: boolean
+ *                             example: false
  *       401:
  *         description: Usuario no autenticado o sin rol Teacher
  *         content:
@@ -421,6 +468,16 @@ router.get(
  *                 message:
  *                   type: string
  *                   example: "Usuario no tiene rol Teacher"
+ *       403:
+ *         description: La cuenta del usuario que realiza la solicitud fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Operación denegada, tu cuenta fue suspendida"
  *       500:
  *         description: Error interno al obtener las solicitudes del tutor
  *         content:
@@ -435,6 +492,7 @@ router.get(
 router.get(
   "/tutor",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   getTutorClassRequestsController,
 );
@@ -495,6 +553,7 @@ router.get(
  *                         email: { type: string, example: email3@uc.cl }
  *                         first_name: { type: string, nullable: true, example: null }
  *                         last_name_1: { type: string, nullable: true, example: null }
+ *                         isDeleted: { type: bool, example: false }
  *                     classOffer:
  *                       type: object
  *                       properties:
@@ -525,7 +584,7 @@ router.get(
  *                   example: Usuario no autenticado
  *
  *       403:
- *         description: El usuario no es el tutor de la clase
+ *         description: El usuario que realiza la solicitud no es el tutor de la clase o su cuenta fue eliminada
  *         content:
  *           application/json:
  *             schema:
@@ -533,7 +592,7 @@ router.get(
  *               properties:
  *                 error:
  *                   type: string
- *                   example: No tienes permisos para modificar esta solicitud
+ *                   example: No tienes permisos para modificar esta solicitud || Operación denegada, tu cuenta fue suspendida
  *
  *       404:
  *         description: Solicitud de clase no encontrada
@@ -549,6 +608,7 @@ router.get(
 router.patch(
   "/:classRequestId",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   updateClassRequestStateController,
 );
@@ -610,12 +670,14 @@ router.patch(
  *                           email: { type: string, example: alumno1@uc.cl }
  *                           first_name: { type: string, nullable: true, example: null }
  *                           last_name_1: { type: string, nullable: true, example: null }
+ *                           isDeleted: { type: boolean, example: false }
  *                       classOffer:
  *                         type: object
  *                         properties:
  *                           title: { type: string, example: Calculo 1 }
  *                           category: { type: string, example: Calculo }
  *                           price: { type: integer, example: 100 }
+ *                           isDeleted: { type: boolean, example: false }
  *
  *       400:
  *         description: ID de clase inválido
@@ -640,7 +702,7 @@ router.patch(
  *                   example: Usuario no autenticado
  *
  *       403:
- *         description: El usuario no es el tutor de esta clase
+ *         description: El usuario que realiza la solicitud no es el tutor de esta clase o su cuenta fue eliminada.
  *         content:
  *           application/json:
  *             schema:
@@ -648,7 +710,7 @@ router.patch(
  *               properties:
  *                 error:
  *                   type: string
- *                   example: No eres el tutor de esta clase
+ *                   example: No eres el tutor de esta clase || Operación denegada, tu cuenta fue suspendida
  *
  *       404:
  *         description: Clase no encontrada
@@ -664,6 +726,7 @@ router.patch(
 router.get(
   "/:classOfferId",
   authenticate,
+  checkUserIsDeleted,
   autorize("Teacher"),
   getClassRequestsByClassController,
 );
@@ -824,6 +887,115 @@ router.post(
   authenticate,
   autorize("Teacher"),
   confirmClassRequestController,
+);
+
+/**
+ * @swagger
+ * /class-requests/{classRequestId}:
+ *   get:
+ *     summary: Obtener una reserva específica por su ID
+ *     description: >
+ *       Permite a un estudiante autenticado obtener los detalles completos de una reserva,
+ *       incluyendo información de la clase y del profesor.
+ *       Requiere un **access_token** válido y que la cuenta del usuario no esté suspendida.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classRequestId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID numérico de la reserva.
+ *     responses:
+ *       200:
+ *         description: Datos de la reserva obtenidos correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 classReq:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     day:
+ *                       type: integer
+ *                       example: 1
+ *                     slot:
+ *                       type: integer
+ *                       example: 1
+ *                     createdAt:
+ *                       type: string
+ *                       example: "2025-01-14"
+ *                     state:
+ *                       type: string
+ *                       example: "PENDING"
+ *                     classOffer:
+ *                       type: object
+ *                       properties:
+ *                         title:
+ *                           type: string
+ *                         price:
+ *                           type: number
+ *                         category:
+ *                           type: string
+ *                         isDeleted:
+ *                           type: boolean
+ *                           example: false
+ *                         author:
+ *                           type: object
+ *                           properties:
+ *                             username:
+ *                               type: string
+ *                             first_name:
+ *                               type: string
+ *                             last_name_1:
+ *                               type: string
+ *                             isDeleted:
+ *                               type: boolean
+ *                               example: false
+ *
+ *       400:
+ *         description: El ID de la reserva es inválido o no fue proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Id de la reserva faltante."
+ *
+ *       401:
+ *         description: Token faltante, inválido o expirado.
+ *
+ *       403:
+ *         description: Operación denegada, tu cuenta fue suspendida.
+ *
+ *       404:
+ *         description: La reserva especificada no existe.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "La reserva especificada no existe."
+ *
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.get(
+  "/:classRequestId",
+  authenticate,
+  checkUserIsDeleted,
+  autorize("Student"),
+  getClassRequestByIdController,
 );
 
 export default router;

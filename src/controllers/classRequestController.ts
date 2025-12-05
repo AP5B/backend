@@ -9,6 +9,7 @@ import {
   getClassRequestsByClassService,
   acceptClassService,
   confirmClassService,
+  getClassRequestByIdService,
 } from "../services/classRequestService";
 
 /**
@@ -175,6 +176,27 @@ export const getClassRequestsByClassController = async (
   });
 };
 
+export const acceptClassRequestController = async (
+  req: Request,
+  res: Response,
+) => {
+  const classRequestId = parseInt(req.params.classRequestId as string);
+  const accept = req.body.state as boolean;
+
+  if (accept !== true && accept !== false) {
+    throw new HttpError(400, "El campo 'state' debe ser true o false");
+  }
+
+  if (Number.isNaN(classRequestId))
+    throw new HttpError(400, "classRequestId debe ser un numero");
+
+  await acceptClassService(classRequestId, accept);
+
+  res.status(200).json({
+    message: "Solicitud de clase aceptada exitosamente",
+  });
+};
+
 export const confirmClassRequestController = async (
   req: Request,
   res: Response,
@@ -192,18 +214,16 @@ export const confirmClassRequestController = async (
   });
 };
 
-export const acceptClassRequestController = async (
+export const getClassRequestByIdController = async (
   req: Request,
   res: Response,
 ) => {
   const classRequestId = parseInt(req.params.classRequestId as string);
+  if (!classRequestId) {
+    throw new HttpError(400, "Id de la reserva faltante.");
+  }
 
-  if (Number.isNaN(classRequestId))
-    throw new HttpError(400, "classRequestId debe ser un numero");
+  const classReq = await getClassRequestByIdService(classRequestId);
 
-  await acceptClassService(classRequestId);
-
-  res.status(200).json({
-    message: "Solicitud de clase aceptada exitosamente",
-  });
+  return res.status(200).json({ classReq });
 };

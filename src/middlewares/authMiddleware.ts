@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import env from "../config/env";
 import { HttpError } from "./errorHandler";
 import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import PrismaManager from "../utils/prismaManager";
 
 export interface TokenPayload {
   id: string;
@@ -16,6 +17,8 @@ interface AuthUser {
   role: string;
   username: string;
 }
+
+const prisma = PrismaManager.GetClient();
 
 /**
  * Valida Acces Token
@@ -63,7 +66,7 @@ export const authenticate = (
  */
 export const autorize =
   (...roles: string[]) =>
-  (_req: Request, res: Response, next: NextFunction) => {
+  (req: Request, res: Response, next: NextFunction) => {
     const userRol = res.locals.user.role;
 
     if (!roles.includes(userRol)) {
@@ -101,4 +104,29 @@ export const optionalAuthenticate = (
   }
 
   next();
+};
+
+export const checkUserIsDeleted = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const userId = parseInt(res.locals.user.id as string);
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isDeleted: true },
+    });
+
+    if (user && user.isDeleted === true) {
+      throw new HttpError(403, "Operación denegada, tu cuenta fue suspendida.");
+    }
+    next();
+  } catch (error) {
+    console.log(error);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+    throw new HttpError(500, `Error interno del servidor:\n${error}`);
+  }
 };

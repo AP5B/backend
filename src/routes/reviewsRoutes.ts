@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { authenticate } from "../middlewares/authMiddleware";
+import {
+  authenticate,
+  autorize,
+  checkUserIsDeleted,
+} from "../middlewares/authMiddleware";
 import {
   createReviewController,
   getTeacherReviewsController,
@@ -10,7 +14,12 @@ import {
 
 const router = Router();
 
-router.get("/user", authenticate, getCurrentUserReviewsController);
+router.get(
+  "/user",
+  authenticate,
+  checkUserIsDeleted,
+  getCurrentUserReviewsController,
+);
 /**
  * @swagger
  * /reviews/user:
@@ -70,7 +79,15 @@ router.get("/user", authenticate, getCurrentUserReviewsController);
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-10-31T21:27:40.000Z
+ *                         example: 2025-10-31
+ *                       reviewer:
+ *                         type: object
+ *                         properties:
+ *                           username:
+ *                             type: string
+ *                           isDeleted:
+ *                             type: bool
+ *                             example: false
  *       401:
  *         description: No autorizado. El token JWT es inválido o no fue proporcionado.
  *         content:
@@ -93,7 +110,13 @@ router.get("/user", authenticate, getCurrentUserReviewsController);
  *                   example: Error interno del servidor
  */
 
-router.post("/:teacherId", authenticate, createReviewController);
+router.post(
+  "/:teacherId",
+  authenticate,
+  checkUserIsDeleted,
+  autorize("Student"),
+  createReviewController,
+);
 /**
  * @swagger
  * /reviews/{teacherId}:
@@ -158,7 +181,12 @@ router.post("/:teacherId", authenticate, createReviewController);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: "2025-10-31T21:27:40.000Z"
+ *                       example: "2025-10-31"
+ *                     reviewer:
+ *                       type: object
+ *                       properties:
+ *                         username:
+ *                           type: string
  *       400:
  *         description: Id del tutor no fue proporcionado correctamente, el usuario ya dejó una reseña para este tutor o la puntuación no está entre 1 y 5.
  *         content:
@@ -179,6 +207,17 @@ router.post("/:teacherId", authenticate, createReviewController);
  *                 message:
  *                   type: string
  *                   example: Autenticación fallida
+ *       403:
+ *         description: Cuenta del profesor eliminada, la cuenta del autor de la review fue eliminada o el usuario intenta dejar una review sobre si mismo.
+ *         content:
+ *           aplication/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La cuenta del profesor fue suspendida. || Operación denegada, tu cuenta fue suspendida || No puedes dejar una review sobre ti mismo.
+ *
  *       404:
  *         description: Tutor no encontrado
  *         content:
@@ -267,7 +306,15 @@ router.get("/:teacherId", getTeacherReviewsController);
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: "2025-10-31T21:27:40.000Z"
+ *                         example: "2025-10-31"
+ *                       reviewer:
+ *                         type: object
+ *                         properties:
+ *                           username:
+ *                             type: string
+ *                           isDeleted:
+ *                             type: bool
+ *                             example: false
  *       400:
  *         description: Faltan parámetros o el ID del tutor no fue proporcionado correctamente.
  *         content:
@@ -278,6 +325,16 @@ router.get("/:teacherId", getTeacherReviewsController);
  *                 message:
  *                   type: string
  *                   example: Id del tutor faltante.
+ *       403:
+ *         description: Cuenta del profesor eliminada.
+ *         content:
+ *           aplication/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La cuenta del profesor fue suspendida.
  *       404:
  *         description: Tutor no encontrado.
  *         content:
@@ -300,7 +357,13 @@ router.get("/:teacherId", getTeacherReviewsController);
  *                   example: Error interno del servidor.
  */
 
-router.patch("/:reviewId", authenticate, updateReviewController);
+router.patch(
+  "/:reviewId",
+  authenticate,
+  checkUserIsDeleted,
+  autorize("Student"),
+  updateReviewController,
+);
 /**
  * @swagger
  * /reviews/{reviewId}:
@@ -365,7 +428,12 @@ router.patch("/:reviewId", authenticate, updateReviewController);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: "2025-10-31T21:27:40.000Z"
+ *                       example: "2025-10-31"
+ *                     reviewer:
+ *                       type: object
+ *                       properties:
+ *                         username:
+ *                           type: string
  *       400:
  *         description: Solicitud inválida (falta el ID de la review o los datos a actualizar no son válidos).
  *         content:
@@ -386,6 +454,16 @@ router.patch("/:reviewId", authenticate, updateReviewController);
  *                 message:
  *                   type: string
  *                   example: El recurso no le pertenece al usuario actual.
+ *       403:
+ *         description: La cuenta del autor de la review fue eliminada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Operación denegada, tu cuenta fue suspendida.
  *       404:
  *         description: Review no encontrada.
  *         content:
@@ -408,7 +486,12 @@ router.patch("/:reviewId", authenticate, updateReviewController);
  *                   example: Error interno del servidor.
  */
 
-router.delete("/:reviewId", authenticate, deleteReviewController);
+router.delete(
+  "/:reviewId",
+  authenticate,
+  checkUserIsDeleted,
+  deleteReviewController,
+);
 /**
  * @swagger
  * /reviews/{reviewId}:
@@ -478,6 +561,5 @@ router.delete("/:reviewId", authenticate, deleteReviewController);
  *                   type: string
  *                   example: Error interno del servidor.
  */
-router.delete("/:reviewId", authenticate, deleteReviewController);
 
 export default router;
