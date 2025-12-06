@@ -5,12 +5,6 @@ import PrismaManager from "../utils/prismaManager";
 const prisma = PrismaManager.GetClient();
 
 /**
- * Posibles estados de una solicitud de clase.
- */
-export const classRequestStates = ["Pending", "Approved", "Rejected"] as const;
-export type ClassRequestState = (typeof classRequestStates)[number];
-
-/**
  * Datos esperados al crear una nueva solicitud de clase.
  */
 export interface CreateClassRequestBody {
