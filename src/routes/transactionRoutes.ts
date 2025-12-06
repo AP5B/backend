@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { authenticate } from "../middlewares/authMiddleware";
+import {
+  authenticate,
+  checkUserIsDeleted,
+} from "../middlewares/authMiddleware";
 import {
   checkOAuthController,
   createOAuthTokenController,
@@ -185,7 +188,12 @@ const router = Router();
  *             example:
  *               message: 'Error al obtener la preferencia de pago'
  */
-router.get("/:classRequest", authenticate, getTrantactionController);
+router.get(
+  "/:classRequest",
+  authenticate,
+  checkUserIsDeleted,
+  getTrantactionController,
+);
 
 /**
  * @swagger
@@ -252,7 +260,12 @@ router.get("/:classRequest", authenticate, getTrantactionController);
  *             example:
  *               message: 'Error al actualizar la transaccion'
  */
-router.post("/:classRequest", authenticate, updateTransactionController);
+router.post(
+  "/:classRequest",
+  authenticate,
+  checkUserIsDeleted,
+  updateTransactionController,
+);
 
 /**
  * @swagger
@@ -308,7 +321,12 @@ router.post("/:classRequest", authenticate, updateTransactionController);
  *             example:
  *               message: 'Error al solicitar el reembolso'
  */
-router.post("/refund/:classRequest", authenticate, refundTransactionController);
+router.post(
+  "/refund/:classRequest",
+  authenticate,
+  checkUserIsDeleted,
+  refundTransactionController,
+);
 
 /**
  * @swagger
@@ -353,7 +371,12 @@ router.post("/refund/:classRequest", authenticate, refundTransactionController);
  *             example:
  *               message: 'Error al verificar el estado de OAuth'
  */
-router.get("/oauth/check", authenticate, checkOAuthController);
+router.get(
+  "/oauth/check",
+  authenticate,
+  checkUserIsDeleted,
+  checkOAuthController,
+);
 
 /**
  * @swagger
@@ -397,7 +420,12 @@ router.get("/oauth/check", authenticate, checkOAuthController);
  *             example:
  *               message: 'Error en el proceso de OAuth con MercadoPago'
  */
-router.post("/oauth/token", authenticate, createOAuthTokenController);
+router.post(
+  "/oauth/token",
+  authenticate,
+  checkUserIsDeleted,
+  createOAuthTokenController,
+);
 
 /**
  * @swagger
