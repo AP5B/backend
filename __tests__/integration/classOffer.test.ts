@@ -56,8 +56,20 @@ describe("Class Offer endpoints", () => {
       role: UserRole.Teacher,
     };
 
+    const mercadopagoInfo = {
+      accessToken: "testAccessToken",
+      accessTokenExpiration: new Date(Date.now() + 3600 * 1000).toISOString(),
+      refreshToken: "testRefreshToken",
+      refreshTokenExpiration: new Date(Date.now() + 7200 * 1000).toISOString(),
+    };
+
     testTeacherUser = await prisma.user.create({
-      data: testUserData,
+      data: {
+        ...testUserData,
+        mercadopagoInfo: {
+          create: mercadopagoInfo,
+        },
+      },
     });
 
     testTeacherUser2 = await prisma.user.create({
@@ -65,6 +77,9 @@ describe("Class Offer endpoints", () => {
         ...testUserData,
         username: "teacherUser2",
         email: "login2@teacher.com",
+        mercadopagoInfo: {
+          create: mercadopagoInfo,
+        },
       },
     });
 

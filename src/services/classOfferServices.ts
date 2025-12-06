@@ -135,6 +135,7 @@ export const getClassOfferByIdService = async (
   classId: number,
   reviewsPage: number,
   reviewsLimit: number,
+  userId: number | null,
 ) => {
   try {
     const offset = (reviewsPage - 1) * reviewsLimit;
@@ -150,6 +151,19 @@ export const getClassOfferByIdService = async (
         price: true,
         createdAt: true,
         category: true,
+        ...(userId
+          ? {
+              classRequests: {
+                where: { userId },
+                select: {
+                  state: true,
+                  day: true,
+                  slot: true,
+                  id: true,
+                },
+              },
+            }
+          : {}),
         author: {
           select: {
             id: true,

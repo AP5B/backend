@@ -86,3 +86,21 @@ You can run specific test files or directories using Jest:
 ```bash
 npm run test:only -- "./__tests__/integration/someTestFile.test.ts"
 ```
+
+## Setup de Mercado Pago
+
+To set up Mercado Pago, you only need to add the following variables to the `.env` file:
+
+```
+MP_PUBLIC_KEY=...
+MP_ACCESS_TOKEN=...
+MP_CLIENT_ID=...
+MP_CLIENT_SECRET=...
+
+FRONTEND_URL=<url>
+BACKEND_URL=<url>
+```
+
+> [!NOTE] URLs must always be the deployed ones, even in develop.
+
+Most of this vaiables can be obtained from the Mercado Pago integration page
