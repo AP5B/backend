@@ -10,6 +10,7 @@ import {
 import {
   authenticate,
   autorize,
+  optionalAuthenticate,
   checkUserIsDeleted,
 } from "../middlewares/authMiddleware";
 
@@ -467,7 +468,7 @@ router.get(
  *                   type: string
  *                   example: Error interno del servidor
  */
-router.get("/:classId", getClassOfferByIdController);
+router.get("/:classId", optionalAuthenticate, getClassOfferByIdController);
 
 /**
  * @swagger

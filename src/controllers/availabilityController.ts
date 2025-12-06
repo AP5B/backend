@@ -3,7 +3,6 @@ import { HttpError } from "../middlewares/errorHandler";
 import {
   Availability,
   AvailabilityCreatePayload,
-  AvailabilityUpdatePayload,
   deleteAvailabilitiesService,
   getAvailailitiesService,
   saveAvailabilityService,
@@ -26,28 +25,14 @@ const sanitizeCreateAvailabilities = (
   return sanitized;
 };
 
-const sanitizeUploadAvailabilities = (
-  userId: number,
-  av: Availability[],
-): AvailabilityUpdatePayload[] => {
-  const sanitized = av.map((a) => {
-    return {
-      id: a.id,
-      userId,
-      slot: a.slot,
-      day: a.day,
-    };
-  });
-  return sanitized;
-};
-
 const validateAvailability = (av: Omit<Availability, "id">) => {
-  if (!av?.slot) throw new HttpError(400, "slot es requerido.");
+  if (!av?.slot && av.slot !== 0)
+    throw new HttpError(400, "slot es requerido.");
   if (!Number.isInteger(av.slot))
     throw new HttpError(400, `slot debe ser un número.`);
   if (av.slot < 0 || av.slot > 24)
     throw new HttpError(400, `slot fuera de rango (0 - 24).`);
-  if (!av?.day) throw new HttpError(400, "day es requerido.");
+  if (!av?.day && av.day !== 0) throw new HttpError(400, "day es requerido.");
   if (!Number.isInteger(av.day))
     throw new HttpError(400, "day debe ser un entero.");
   if (av.day > 7 || av.day < 1)
@@ -113,25 +98,6 @@ export const getAvailabilityController = async (
 };
 
 /**
- * Con la estructura actual de days/slots no tiene sentido el editar la disponibilidad
- * Este controlador no debería ser usado a menos que se haga un refactor del funcionamiento completo del modelo
- */
-export const editAvailabilityController = (req: Request, res: Response) => {
-  const userId = parseInt(req.params.teacherId as string, 10);
-  const reqBody = req.body as Availability[];
-
-  if (Number.isInteger(userId))
-    throw new HttpError(400, "teacherId debe ser un entero.");
-  validateRequestBody(reqBody);
-  const sanitizedBody = sanitizeUploadAvailabilities(userId, reqBody);
-
-  // llamar al servicio
-  console.log(sanitizedBody);
-
-  res.status(200).send();
-};
-
-/**
  * Este controlador permite eliminar un arreglo con id's de disponibilidad
  */
 export const deleteAvailabilityController = async (
@@ -144,14 +110,14 @@ export const deleteAvailabilityController = async (
   if (!avTupQuery || avTupQuery.length === 0) {
     throw new HttpError(
       400,
-      "Se requiere al menos una par de disponibilidad para eliminar.",
+      "Se requiere al menos un par de disponibilidad para eliminar.",
     );
   }
 
   const avTup: [number, number][] = avTupQuery.map((x): [number, number] => {
     // parsing data
     if (!x || x.length === 0) {
-      throw new HttpError(400, `Par con formato inválido.`);
+      throw new HttpError(400, `Formato de par inválido. Deben ser day,slot`);
     }
 
     const split = (x as string).split(",") as [string, string];

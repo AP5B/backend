@@ -15,12 +15,42 @@ import {
   editClassOfferRequestBody,
   categories,
 } from "../services/classOfferServices";
+import { checkOAuthService } from "../services/transactionService";
 
 const validateClassOfferBody = (body: classOfferRequestBody) => {
+  const regex = /\D/;
   if (!body.title?.trim())
     throw new HttpError(400, "El titulo no puede estar vacío");
+  if (body.title.trim()) {
+    if (!regex.test(body.title.trim())) {
+      throw new HttpError(
+        400,
+        "El titulo no puede estar constituido solo por números.",
+      );
+    }
+    if (body.title.trim().length > 50 || body.title.trim().length < 3) {
+      throw new HttpError(400, "El titulo debe tener entre 3 y 50 caracteres.");
+    }
+  }
   if (!body.description?.trim())
     throw new HttpError(400, "La descripción no puede estar vacía");
+  if (body.description.trim()) {
+    if (!regex.test(body.description.trim())) {
+      throw new HttpError(
+        400,
+        "La descripción no puede estar constituida solo por números.",
+      );
+    }
+    if (
+      body.description.trim().length > 1200 ||
+      body.description.trim().length < 1
+    ) {
+      throw new HttpError(
+        400,
+        "La descripción debe tener entre 1 y 1200 caracteres.",
+      );
+    }
+  }
   if (!body.price) throw new HttpError(400, "El precio no puede estar vacío");
   if (typeof body.price != "number")
     throw new HttpError(400, "El precio debe ser un numero");
@@ -29,6 +59,7 @@ const validateClassOfferBody = (body: classOfferRequestBody) => {
 };
 
 const validateEditClassOfferRequestBody = (body: editClassOfferRequestBody) => {
+  const regex = /\D/;
   if (!(body.title || body.description || body.price || body.category))
     throw new HttpError(
       400,
@@ -36,8 +67,32 @@ const validateEditClassOfferRequestBody = (body: editClassOfferRequestBody) => {
     );
   if (body.title !== undefined && !body.title?.trim())
     throw new HttpError(400, "El titulo no puede estar vacío");
+  if (body.title !== undefined && !regex.test(body.title.trim()))
+    throw new HttpError(
+      400,
+      "El titulo no puede estar constituido solo por números.",
+    );
+  if (
+    body.title !== undefined &&
+    (body.title.trim().length < 3 || body.title.trim().length > 50)
+  )
+    throw new HttpError(400, "El titulo debe tener entre 3 y 50 caracteres.");
   if (body.description !== undefined && !body.description?.trim())
     throw new HttpError(400, "La descripción no puede estar vacía");
+  if (body.description !== undefined && !regex.test(body.description.trim()))
+    throw new HttpError(
+      400,
+      "La descripción no puede estar constituida solo por números.",
+    );
+  if (
+    body.description !== undefined &&
+    (body.description.trim().length < 1 ||
+      body.description.trim().length > 1200)
+  )
+    throw new HttpError(
+      400,
+      "La descripción debe tener entre 1 y 1200 caracteres.",
+    );
   if (body.price !== undefined && typeof body.price != "number")
     throw new HttpError(400, "El precio debe ser un numero");
   if (body.category !== undefined && !categories.includes(body.category))
@@ -89,6 +144,8 @@ export const getClassOfferByIdController = async (
   const limit = parseInt(req.query.reviewsLimit as string) || 5;
   const normPage = page > 0 ? page : 1;
   const normLimit = limit > 0 ? limit : 5;
+  const userId = res.locals.user?.id || null;
+  console.log(userId);
 
   if (isNaN(classId))
     throw new HttpError(
@@ -100,6 +157,7 @@ export const getClassOfferByIdController = async (
     classId,
     normPage,
     normLimit,
+    userId,
   );
 
   res.status(200).json(classOffer);
@@ -112,15 +170,25 @@ export const createClassOfferController = async (
   const userId: number = res.locals.user.id;
   const reqBody = req.body as classOfferRequestBody;
 
+  const response = await checkOAuthService(userId);
+
+  if (response.hasOAuth === false) {
+    throw new HttpError(
+      response.status || 403,
+      response.message ||
+        "El usuario no ha completado el proceso de OAuth de Mercado Pago.",
+    );
+  }
+
   validateClassOfferBody(reqBody);
 
   const { title, description, price, category } = reqBody;
 
   // de todos modos el service igual sanitiza
   const sanitizedBody: classOfferRequestBody = {
-    title,
-    description,
-    price,
+    title: title.trim(),
+    description: description.trim(),
+    price: price,
     authorId: userId,
   };
   // si en la request no hay categoria se ocupa el default que define prisma (Otro)
@@ -146,9 +214,10 @@ export const editClassOfferController = async (req: Request, res: Response) => {
   const sanitizedBody: editClassOfferRequestBody = {
     id: classId,
   };
-  if (reqBody.title) sanitizedBody.title = reqBody.title;
+  if (reqBody.title) sanitizedBody.title = reqBody.title.trim();
   if (reqBody.price) sanitizedBody.price = reqBody.price;
-  if (reqBody.description) sanitizedBody.description = reqBody.description;
+  if (reqBody.description)
+    sanitizedBody.description = reqBody.description.trim();
   if (reqBody.category) sanitizedBody.category = reqBody.category;
 
   const classOffer = await editClassOfferService(userId, sanitizedBody);

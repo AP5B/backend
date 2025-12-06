@@ -35,7 +35,19 @@ export const createReviewController = async (req: Request, res: Response) => {
   }
 
   const sanitizedBody: reviewRequestBody = { rating: reqBody.rating };
-  if (reqBody.content) sanitizedBody.content = reqBody.content;
+  if (reqBody.content) {
+    if (reqBody.content.trim().length > 1000) {
+      throw new HttpError(
+        400,
+        "Cuerpo de la review no puede superar los 1000 caracteres.",
+      );
+    }
+    const regex = /\D/;
+    if (!regex.test(reqBody.content.trim())) {
+      throw new HttpError(400, "Formato del cuerpo de la review inválido.");
+    }
+    sanitizedBody.content = reqBody.content.trim();
+  }
 
   const newReview = await createReviewService(sanitizedBody, teacherId, userId);
 
@@ -102,7 +114,19 @@ export const updateReviewController = async (req: Request, res: Response) => {
   }
 
   if (rating) sanitizedBody.rating = rating;
-  if (content) sanitizedBody.content = content;
+  if (content) {
+    if (content.trim().length > 1000) {
+      throw new HttpError(
+        400,
+        "Cuerpo de la review no puede superar los 1000 caracteres.",
+      );
+    }
+    const regex = /\D/;
+    if (!regex.test(content.trim())) {
+      throw new HttpError(400, "Formato del cuerpo de la review inválido.");
+    }
+    sanitizedBody.content = content.trim();
+  }
 
   const editedReview = await updateReviewService(
     reviewId,

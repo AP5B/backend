@@ -5,6 +5,11 @@ import {
   getTutorClassRequestsController,
   updateClassRequestStateController,
   getClassRequestsByClassController,
+  confirmClassRequestController,
+  acceptClassRequestController,
+  getClassRequestByIdController,
+  getUserReqInClassOfferController,
+  deleteClassRequestController,
 } from "../controllers/classRequestController";
 import {
   authenticate,
@@ -161,6 +166,9 @@ router.get(
  *                         category:
  *                           type: string
  *                           example: Deportes
+ *                         isDeleted:
+ *                           type: boolean
+ *                           example: false
  *                         author:
  *                           type: object
  *                           properties:
@@ -173,6 +181,9 @@ router.get(
  *                             last_name_1:
  *                               type: string
  *                               example: López
+ *                             isDeleted:
+ *                               type: boolean
+ *                               example: false
  *       400:
  *         description: Error en los datos enviados
  *         content:
@@ -301,6 +312,9 @@ router.post(
  *                           category:
  *                             type: string
  *                             example: "Calculo"
+ *                           isDeleted:
+ *                             type: boolean
+ *                             example: false
  *                           author:
  *                             type: object
  *                             properties:
@@ -443,6 +457,9 @@ router.get(
  *                           price:
  *                             type: number
  *                             example: 15000
+ *                           isDeleted:
+ *                             type: boolean
+ *                             example: false
  *       401:
  *         description: Usuario no autenticado o sin rol Teacher
  *         content:
@@ -655,12 +672,14 @@ router.patch(
  *                           email: { type: string, example: alumno1@uc.cl }
  *                           first_name: { type: string, nullable: true, example: null }
  *                           last_name_1: { type: string, nullable: true, example: null }
+ *                           isDeleted: { type: boolean, example: false }
  *                       classOffer:
  *                         type: object
  *                         properties:
  *                           title: { type: string, example: Calculo 1 }
  *                           category: { type: string, example: Calculo }
  *                           price: { type: integer, example: 100 }
+ *                           isDeleted: { type: boolean, example: false }
  *
  *       400:
  *         description: ID de clase inválido
@@ -712,6 +731,469 @@ router.get(
   checkUserIsDeleted,
   autorize("Teacher"),
   getClassRequestsByClassController,
+);
+
+/**
+ * @swagger
+ * /class-requests/accept/{classRequestId}:
+ *   post:
+ *     summary: Aceptar una solicitud de clase
+ *     description: Permite al tutor aceptar una solicitud de clase pendiente de una de sus ofertas.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classRequestId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la solicitud de clase a aceptar.
+ *     responses:
+ *       200:
+ *         description: Solicitud aceptada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Solicitud de clase aceptada exitosamente
+ *       400:
+ *         description: Datos inválidos en la solicitud
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: classRequestId debe ser un numero
+ *       401:
+ *         description: Usuario no autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no autenticado
+ *       403:
+ *         description: El usuario no tiene el rol Teacher
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: No tienes permisos para aceptar esta solicitud
+ *       404:
+ *         description: Solicitud de clase no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La solicitud de clase no existe
+ */
+router.post(
+  "/accept/:classRequestId",
+  authenticate,
+  autorize("Teacher"),
+  acceptClassRequestController,
+);
+
+/**
+ * @swagger
+ * /class-requests/confirm/{classRequestId}:
+ *   post:
+ *     summary: Confirmar una clase aceptada
+ *     description: Permite al tutor confirmar una clase aceptada utilizando el código de validación enviado.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classRequestId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la solicitud de clase que se confirmará.
+ *       - in: query
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Código de verificación proporcionado para confirmar la clase.
+ *     responses:
+ *       200:
+ *         description: Clase confirmada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Clase confirmada exitosamente
+ *       400:
+ *         description: Datos inválidos (ID o código)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: classRequestId debe ser un numero
+ *       401:
+ *         description: Usuario no autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no autenticado
+ *       403:
+ *         description: El usuario no tiene el rol Teacher
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: No tienes permisos para confirmar esta solicitud
+ *       404:
+ *         description: Solicitud de clase no encontrada o código inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La solicitud de clase no existe o el código es incorrecto
+ */
+router.post(
+  "/confirm/:classRequestId",
+  authenticate,
+  autorize("Teacher"),
+  confirmClassRequestController,
+);
+
+/**
+ * @swagger
+ * /class-requests/{classRequestId}:
+ *   get:
+ *     summary: Obtener una reserva específica por su ID
+ *     description: >
+ *       Permite a un estudiante autenticado obtener los detalles completos de una reserva,
+ *       incluyendo información de la clase y del profesor.
+ *       Requiere un **access_token** válido y que la cuenta del usuario no esté suspendida.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classRequestId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID numérico de la reserva.
+ *     responses:
+ *       200:
+ *         description: Datos de la reserva obtenidos correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 classReq:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     day:
+ *                       type: integer
+ *                       example: 1
+ *                     slot:
+ *                       type: integer
+ *                       example: 1
+ *                     createdAt:
+ *                       type: string
+ *                       example: "2025-01-14"
+ *                     state:
+ *                       type: string
+ *                       example: "PENDING"
+ *                     classOffer:
+ *                       type: object
+ *                       properties:
+ *                         title:
+ *                           type: string
+ *                         price:
+ *                           type: number
+ *                         category:
+ *                           type: string
+ *                         isDeleted:
+ *                           type: boolean
+ *                           example: false
+ *                         author:
+ *                           type: object
+ *                           properties:
+ *                             username:
+ *                               type: string
+ *                             first_name:
+ *                               type: string
+ *                             last_name_1:
+ *                               type: string
+ *                             isDeleted:
+ *                               type: boolean
+ *                               example: false
+ *
+ *       400:
+ *         description: El ID de la reserva es inválido o no fue proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Id de la reserva faltante."
+ *
+ *       401:
+ *         description: Token faltante, inválido o expirado.
+ *
+ *       403:
+ *         description: Operación denegada, tu cuenta fue suspendida.
+ *
+ *       404:
+ *         description: La reserva especificada no existe.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "La reserva especificada no existe."
+ *
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.get(
+  "/:classRequestId",
+  authenticate,
+  checkUserIsDeleted,
+  autorize("Student"),
+  getClassRequestByIdController,
+);
+
+/**
+ * @swagger
+ * /class-requests/{classOfferId}/me:
+ *   get:
+ *     summary: Obtener las reservas del usuario autenticado en una clase específica
+ *     description: >
+ *       Devuelve todas las reservas realizadas por el estudiante autenticado
+ *       para una clase en particular (`classOfferId`).
+ *
+ *       El usuario debe estar autenticado, su cuenta no debe estar suspendida
+ *       y debe tener el rol **Student**.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classOfferId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la oferta de clase en la cual el usuario realizó reservas.
+ *     responses:
+ *       200:
+ *         description: Reservas del usuario obtenidas correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Reservas del usuario obtenidas con éxito"
+ *                 classReqs:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       day:
+ *                         type: integer
+ *                         example: 3
+ *                       slot:
+ *                         type: integer
+ *                         example: 14
+ *                       createdAt:
+ *                         type: string
+ *                         example: "2025-01-20"
+ *                       state:
+ *                         type: string
+ *                         example: "Pending"
+ *                       classOffer:
+ *                         type: object
+ *                         properties:
+ *                           title:
+ *                             type: string
+ *                           price:
+ *                             type: number
+ *                           category:
+ *                             type: string
+ *                           isDeleted:
+ *                             type: boolean
+ *                             example: false
+ *                           author:
+ *                             type: object
+ *                             properties:
+ *                               username:
+ *                                 type: string
+ *                               first_name:
+ *                                 type: string
+ *                               last_name_1:
+ *                                 type: string
+ *                               isDeleted:
+ *                                 type: boolean
+ *                                 example: false
+ *       400:
+ *         description: ID de la clase faltante o inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "ID de la clase faltante."
+ *       401:
+ *         description: Autenticación fallida (token faltante, inválido o expirado).
+ *       403:
+ *         description: La cuenta del usuario autenticado está suspendida o rol no permitido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Operación denegada, tu cuenta fue suspendida."
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.get(
+  "/:classOfferId/me",
+  authenticate,
+  checkUserIsDeleted,
+  autorize("Student"),
+  getUserReqInClassOfferController,
+);
+
+/**
+ * @swagger
+ * /class-requests/{classRequestId}:
+ *   delete:
+ *     summary: Eliminar una reserva hecha por el usuario autenticado
+ *     description: |
+ *       Permite a un estudiante eliminar una reserva previamente realizada.
+ *       Solo el dueño de la reserva puede eliminarla.
+ *       Si la reserva no existe o pertenece a otro usuario, se retornará un error.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classRequestId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la reserva que se desea eliminar.
+ *     responses:
+ *       200:
+ *         description: Reserva eliminada exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Reserva eliminada con éxito.
+ *       400:
+ *         description: El ID de la reserva es inválido o está ausente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Id de la reserva faltante.
+ *       401:
+ *         description: El usuario no está autenticado o intenta eliminar una reserva que no le pertenece.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: El recurso no le pertenece al usuario actual.
+ *       403:
+ *         description: El usuario autenticado está eliminado (lógica de soft delete).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La cuenta del usuario se encuentra eliminada.
+ *       404:
+ *         description: La reserva especificada no existe.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Reserva a eliminar no encontrada.
+ *       500:
+ *         description: Error interno en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error interno del servidor.
+ */
+router.delete(
+  "/:classRequestId",
+  authenticate,
+  checkUserIsDeleted,
+  deleteClassRequestController,
 );
 
 export default router;

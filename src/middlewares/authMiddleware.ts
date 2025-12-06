@@ -76,6 +76,36 @@ export const autorize =
     next();
   };
 
+/**
+ * Middleware de autenticación opcional.
+ * Si el usuario proporciona un token válido, se guarda en `res.locals.user`.
+ * Si no se proporciona un token o es inválido, la solicitud continúa sin usuario autenticado.
+ */
+export const optionalAuthenticate = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const token = req.cookies["access_token"];
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, env.jwt_secret) as TokenPayload;
+    res.locals.user = {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+      username: decoded.username,
+    } as AuthUser;
+  } catch (error) {
+    console.warn("Token inválido o expirado en autenticación opcional:", error);
+  }
+
+  next();
+};
+
 export const checkUserIsDeleted = async (
   req: Request,
   res: Response,

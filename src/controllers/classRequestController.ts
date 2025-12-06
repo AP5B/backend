@@ -7,6 +7,11 @@ import {
   getTutorClassRequestsService,
   updateClassRequestStateService,
   getClassRequestsByClassService,
+  acceptClassService,
+  confirmClassService,
+  getClassRequestByIdService,
+  getUserReqInClassOfferService,
+  deleteClassRequestService,
 } from "../services/classRequestService";
 
 /**
@@ -170,5 +175,95 @@ export const getClassRequestsByClassController = async (
 
   return res.status(200).json({
     data,
+  });
+};
+
+export const acceptClassRequestController = async (
+  req: Request,
+  res: Response,
+) => {
+  const classRequestId = parseInt(req.params.classRequestId as string);
+  const accept = req.body.state as boolean;
+
+  if (accept !== true && accept !== false) {
+    throw new HttpError(400, "El campo 'state' debe ser true o false");
+  }
+
+  if (Number.isNaN(classRequestId))
+    throw new HttpError(400, "classRequestId debe ser un numero");
+
+  await acceptClassService(classRequestId, accept);
+
+  res.status(200).json({
+    message: "Solicitud de clase aceptada exitosamente",
+  });
+};
+
+export const confirmClassRequestController = async (
+  req: Request,
+  res: Response,
+) => {
+  const classRequestId = parseInt(req.params.classRequestId as string);
+  const code = req.query.code as string;
+
+  if (Number.isNaN(classRequestId))
+    throw new HttpError(400, "classRequestId debe ser un numero");
+
+  await confirmClassService(classRequestId, code);
+
+  res.status(200).json({
+    message: "Clase confirmada exitosamente",
+  });
+};
+
+export const getClassRequestByIdController = async (
+  req: Request,
+  res: Response,
+) => {
+  const classRequestId = parseInt(req.params.classRequestId as string);
+
+  if (!classRequestId) {
+    throw new HttpError(400, "Id de la reserva faltante.");
+  }
+
+  const classReq = await getClassRequestByIdService(classRequestId);
+
+  return res.status(200).json({ classReq });
+};
+
+export const getUserReqInClassOfferController = async (
+  req: Request,
+  res: Response,
+) => {
+  const userId = parseInt(res.locals.user.id as string);
+  const classOfferId = parseInt(req.params.classOfferId as string);
+
+  if (!classOfferId) {
+    throw new HttpError(400, "ID de la clase faltante.");
+  }
+
+  const classReqs = await getUserReqInClassOfferService(userId, classOfferId);
+
+  return res.status(200).json({
+    message: "Reservas del usuario obtenidas con éxito",
+    classReqs,
+  });
+};
+
+export const deleteClassRequestController = async (
+  req: Request,
+  res: Response,
+) => {
+  const userId = parseInt(res.locals.user.id as string);
+  const classRequestId = parseInt(req.params.classRequestId as string);
+
+  if (!classRequestId) {
+    throw new HttpError(400, "Id de la reserva faltante.");
+  }
+
+  await deleteClassRequestService(userId, classRequestId);
+
+  return res.status(200).json({
+    message: "Reserva eliminada con éxito.",
   });
 };
