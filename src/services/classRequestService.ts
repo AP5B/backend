@@ -531,3 +531,76 @@ export const getClassRequestByIdService = async (classRequestId: number) => {
     throw new HttpError(500, `Error interno del servidor: ${error}`);
   }
 };
+
+export const getUserReqInClassOfferService = async (
+  userId: number,
+  classOfferId: number,
+) => {
+  try {
+    const classReqs = await prisma.classRequest.findMany({
+      where: { userId: userId, classOfferId: classOfferId },
+      select: {
+        id: true,
+        day: true,
+        slot: true,
+        createdAt: true,
+        state: true,
+        classOffer: {
+          select: {
+            title: true,
+            price: true,
+            category: true,
+            isDeleted: true,
+            author: {
+              select: {
+                username: true,
+                first_name: true,
+                last_name_1: true,
+                isDeleted: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const formattedClassRequests = classReqs.map((classReq) => {
+      const formattedCreatedAt = classReq.createdAt.toISOString().split("T")[0];
+      return { ...classReq, createdAt: formattedCreatedAt };
+    });
+
+    return formattedClassRequests;
+  } catch (error) {
+    console.error(error);
+    if (error instanceof HttpError) throw error;
+    throw new HttpError(500, `Error interno del servidor: ${error}`);
+  }
+};
+
+export const deleteClassRequestService = async (
+  userId: number,
+  classRequestId: number,
+) => {
+  try {
+    const classRequest = await prisma.classRequest.findUnique({
+      where: { id: classRequestId },
+      select: { userId: true },
+    });
+
+    if (!classRequest) {
+      throw new HttpError(404, "Reserva a eliminar no encontrada.");
+    }
+
+    if (userId !== classRequest.userId) {
+      throw new HttpError(401, `El recurso no le pertenece al usuario actual.`);
+    }
+
+    await prisma.classRequest.delete({
+      where: { id: classRequestId },
+    });
+  } catch (error) {
+    console.error(error);
+    if (error instanceof HttpError) throw error;
+    throw new HttpError(500, `Error interno del servidor: ${error}`);
+  }
+};

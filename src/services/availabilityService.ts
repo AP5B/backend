@@ -16,13 +16,6 @@ export interface AvailabilityCreatePayload {
   day: number;
 }
 
-export interface AvailabilityUpdatePayload {
-  id: number;
-  userId: number;
-  slot: number;
-  day: number;
-}
-
 export const saveAvailabilityService = async (
   availabilities: AvailabilityCreatePayload[],
 ) => {
@@ -58,6 +51,7 @@ export const getAvailailitiesService = async (teacherId: number) => {
       },
       where: {
         userId: teacherId,
+        user: { isDeleted: false },
       },
       orderBy: [{ day: "asc" }, { slot: "asc" }],
     });

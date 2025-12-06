@@ -14,8 +14,7 @@ import env from "./config/env";
 import reviewsRoutes from "./routes/reviewsRoutes";
 import classRequestRoutes from "./routes/classRequestRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
-import userAccountRoutes from "./routes/userAccountRoutes";
-import { limiter, authLimiter } from "./utils/rateLimiters";
+import profileRoutes from "./routes/profileRoutes";
 
 // Swagger setup
 const options = {
@@ -76,7 +75,7 @@ export const createApp = () => {
   app.use("/reviews/", reviewsRoutes);
   app.use("/class-requests/", classRequestRoutes);
   app.use("/transactions/", transactionRoutes);
-  app.use("/user-account/", userAccountRoutes);
+  app.use("/profile/", profileRoutes);
 
   app.use(errorHandler);
   return app;

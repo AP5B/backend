@@ -10,6 +10,8 @@ import {
   acceptClassService,
   confirmClassService,
   getClassRequestByIdService,
+  getUserReqInClassOfferService,
+  deleteClassRequestService,
 } from "../services/classRequestService";
 
 /**
@@ -219,6 +221,7 @@ export const getClassRequestByIdController = async (
   res: Response,
 ) => {
   const classRequestId = parseInt(req.params.classRequestId as string);
+
   if (!classRequestId) {
     throw new HttpError(400, "Id de la reserva faltante.");
   }
@@ -226,4 +229,41 @@ export const getClassRequestByIdController = async (
   const classReq = await getClassRequestByIdService(classRequestId);
 
   return res.status(200).json({ classReq });
+};
+
+export const getUserReqInClassOfferController = async (
+  req: Request,
+  res: Response,
+) => {
+  const userId = parseInt(res.locals.user.id as string);
+  const classOfferId = parseInt(req.params.classOfferId as string);
+
+  if (!classOfferId) {
+    throw new HttpError(400, "ID de la clase faltante.");
+  }
+
+  const classReqs = await getUserReqInClassOfferService(userId, classOfferId);
+
+  return res.status(200).json({
+    message: "Reservas del usuario obtenidas con éxito",
+    classReqs,
+  });
+};
+
+export const deleteClassRequestController = async (
+  req: Request,
+  res: Response,
+) => {
+  const userId = parseInt(res.locals.user.id as string);
+  const classRequestId = parseInt(req.params.classRequestId as string);
+
+  if (!classRequestId) {
+    throw new HttpError(400, "Id de la reserva faltante.");
+  }
+
+  await deleteClassRequestService(userId, classRequestId);
+
+  return res.status(200).json({
+    message: "Reserva eliminada con éxito.",
+  });
 };

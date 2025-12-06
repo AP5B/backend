@@ -267,6 +267,10 @@ export const editClassOfferService = async (
     const classOffer = await prisma.classOffer.findFirst({
       where: {
         id: id,
+        isDeleted: false,
+      },
+      select: {
+        authorId: true,
       },
       select: {
         authorId: true,

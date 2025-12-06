@@ -12,7 +12,7 @@ export interface registerRequestBody {
   username: string;
   first_name: string;
   last_name_1: string;
-  last_name_2?: string;
+  last_name_2?: string | null;
   email: string;
   password: string;
   role?: UserRole;

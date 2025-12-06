@@ -8,6 +8,8 @@ import {
   confirmClassRequestController,
   acceptClassRequestController,
   getClassRequestByIdController,
+  getUserReqInClassOfferController,
+  deleteClassRequestController,
 } from "../controllers/classRequestController";
 import {
   authenticate,
@@ -996,6 +998,202 @@ router.get(
   checkUserIsDeleted,
   autorize("Student"),
   getClassRequestByIdController,
+);
+
+/**
+ * @swagger
+ * /class-requests/{classOfferId}/me:
+ *   get:
+ *     summary: Obtener las reservas del usuario autenticado en una clase específica
+ *     description: >
+ *       Devuelve todas las reservas realizadas por el estudiante autenticado
+ *       para una clase en particular (`classOfferId`).
+ *
+ *       El usuario debe estar autenticado, su cuenta no debe estar suspendida
+ *       y debe tener el rol **Student**.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classOfferId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la oferta de clase en la cual el usuario realizó reservas.
+ *     responses:
+ *       200:
+ *         description: Reservas del usuario obtenidas correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Reservas del usuario obtenidas con éxito"
+ *                 classReqs:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       day:
+ *                         type: integer
+ *                         example: 3
+ *                       slot:
+ *                         type: integer
+ *                         example: 14
+ *                       createdAt:
+ *                         type: string
+ *                         example: "2025-01-20"
+ *                       state:
+ *                         type: string
+ *                         example: "Pending"
+ *                       classOffer:
+ *                         type: object
+ *                         properties:
+ *                           title:
+ *                             type: string
+ *                           price:
+ *                             type: number
+ *                           category:
+ *                             type: string
+ *                           isDeleted:
+ *                             type: boolean
+ *                             example: false
+ *                           author:
+ *                             type: object
+ *                             properties:
+ *                               username:
+ *                                 type: string
+ *                               first_name:
+ *                                 type: string
+ *                               last_name_1:
+ *                                 type: string
+ *                               isDeleted:
+ *                                 type: boolean
+ *                                 example: false
+ *       400:
+ *         description: ID de la clase faltante o inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "ID de la clase faltante."
+ *       401:
+ *         description: Autenticación fallida (token faltante, inválido o expirado).
+ *       403:
+ *         description: La cuenta del usuario autenticado está suspendida o rol no permitido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Operación denegada, tu cuenta fue suspendida."
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.get(
+  "/:classOfferId/me",
+  authenticate,
+  checkUserIsDeleted,
+  autorize("Student"),
+  getUserReqInClassOfferController,
+);
+
+/**
+ * @swagger
+ * /class-requests/{classRequestId}:
+ *   delete:
+ *     summary: Eliminar una reserva hecha por el usuario autenticado
+ *     description: |
+ *       Permite a un estudiante eliminar una reserva previamente realizada.
+ *       Solo el dueño de la reserva puede eliminarla.
+ *       Si la reserva no existe o pertenece a otro usuario, se retornará un error.
+ *     tags:
+ *       - Class Requests
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: classRequestId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la reserva que se desea eliminar.
+ *     responses:
+ *       200:
+ *         description: Reserva eliminada exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Reserva eliminada con éxito.
+ *       400:
+ *         description: El ID de la reserva es inválido o está ausente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Id de la reserva faltante.
+ *       401:
+ *         description: El usuario no está autenticado o intenta eliminar una reserva que no le pertenece.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: El recurso no le pertenece al usuario actual.
+ *       403:
+ *         description: El usuario autenticado está eliminado (lógica de soft delete).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: La cuenta del usuario se encuentra eliminada.
+ *       404:
+ *         description: La reserva especificada no existe.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Reserva a eliminar no encontrada.
+ *       500:
+ *         description: Error interno en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error interno del servidor.
+ */
+router.delete(
+  "/:classRequestId",
+  authenticate,
+  checkUserIsDeleted,
+  deleteClassRequestController,
 );
 
 export default router;
