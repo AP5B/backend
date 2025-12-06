@@ -120,8 +120,9 @@ export const createClassOfferController = async (
 
   if (response.hasOAuth === false) {
     throw new HttpError(
-      403,
-      "El usuario no ha completado el proceso de OAuth de Mercado Pago.",
+      response.status || 403,
+      response.message ||
+        "El usuario no ha completado el proceso de OAuth de Mercado Pago.",
     );
   }
 
