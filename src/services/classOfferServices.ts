@@ -272,9 +272,6 @@ export const editClassOfferService = async (
       select: {
         authorId: true,
       },
-      select: {
-        authorId: true,
-      },
     });
 
     if (!classOffer)
