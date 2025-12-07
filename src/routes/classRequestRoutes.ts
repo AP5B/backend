@@ -303,6 +303,9 @@ router.post(
  *                       classOffer:
  *                         type: object
  *                         properties:
+ *                           id:
+ *                             type: number
+ *                             example: 1
  *                           title:
  *                             type: string
  *                             example: "calculo 1"
