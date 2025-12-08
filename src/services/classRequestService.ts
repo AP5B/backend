@@ -168,6 +168,7 @@ export const getUserClassRequestService = async (
         state: true,
         classOffer: {
           select: {
+            id: true,
             title: true,
             price: true,
             category: true,
