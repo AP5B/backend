@@ -1,6 +1,7 @@
 import { ClassRequestState } from "@prisma/client";
 import { HttpError } from "../middlewares/errorHandler";
 import PrismaManager from "../utils/prismaManager";
+import { createPreferenceService } from "./transactionService";
 
 const prisma = PrismaManager.GetClient();
 
@@ -166,6 +167,15 @@ export const getUserClassRequestService = async (
         slot: true,
         createdAt: true,
         state: true,
+        transactions: {
+          orderBy: { createdAt: "desc" },
+          where: {
+            status: { in: ["pending", "approved"] },
+          },
+          omit: {
+            classRequestId: true,
+          },
+        },
         classOffer: {
           select: {
             id: true,
@@ -190,6 +200,15 @@ export const getUserClassRequestService = async (
       skip: offset,
       take: limit,
     });
+
+    for (const req of classRequests) {
+      const transaction = req.transactions[0];
+      // El estudiante tiene que pagar pero aun no se ha creado la preferencia
+      if (!transaction && req.state === ClassRequestState.PaymentPending) {
+        const pref = await createPreferenceService(req.id, userId);
+        req.transactions[0] = pref.transaction;
+      }
+    }
 
     const formattedClassRequests = classRequests.map((classReq) => {
       const formattedCreatedAt = classReq.createdAt.toISOString().split("T")[0];
