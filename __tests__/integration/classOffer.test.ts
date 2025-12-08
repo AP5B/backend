@@ -345,7 +345,7 @@ describe("Class Offer endpoints", () => {
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty(
         "message",
-        "La id, de la oferta de clase, debe ser un número.",
+        "Id de la oferta de clase faltante.",
       );
     });
 

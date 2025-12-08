@@ -139,7 +139,7 @@ export const getClassOfferByIdController = async (
   req: Request,
   res: Response,
 ) => {
-  const classId = Number(req.params.classId);
+  const classId = parseInt(req.params.classId as string);
   const page = parseInt(req.query.reviewsPage as string) || 1;
   const limit = parseInt(req.query.reviewsLimit as string) || 5;
   const normPage = page > 0 ? page : 1;
@@ -147,11 +147,7 @@ export const getClassOfferByIdController = async (
   const userId = res.locals.user?.id || null;
   console.log(userId);
 
-  if (isNaN(classId))
-    throw new HttpError(
-      400,
-      "La id, de la oferta de clase, debe ser un número.",
-    );
+  if (!classId) throw new HttpError(400, "Id de la oferta de clase faltante.");
 
   const classOffer = await getClassOfferByIdService(
     classId,

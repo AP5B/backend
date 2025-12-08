@@ -177,6 +177,7 @@ export const getPreferenceService = async (
       status: transaction.status,
     };
   } catch (error) {
+    console.log(error);
     if (error instanceof HttpError) {
       throw error;
     }
