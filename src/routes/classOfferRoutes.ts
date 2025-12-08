@@ -446,7 +446,7 @@ router.get(
  *               properties:
  *                 message:
  *                   type: string
- *                   example: La id, de la oferta de clase, debe ser un número.
+ *                   example: Id de la oferta de clase faltante.
  *       404:
  *         description: No se encontró la oferta de clase con el ID especificado o fue eliminada.
  *         content:
