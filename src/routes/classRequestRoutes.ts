@@ -304,13 +304,13 @@ router.post(
  *                         type: object
  *                         properties:
  *                           id:
- *                             type: number
+ *                             type: integer
  *                             example: 1
  *                           title:
  *                             type: string
  *                             example: "calculo 1"
  *                           price:
- *                             type: number
+ *                             type: integer
  *                             example: 100
  *                           category:
  *                             type: string
@@ -335,6 +335,27 @@ router.post(
  *                               isDeleted:
  *                                 type: bool
  *                                 example: false
+ *                       transaction:
+ *                        type: object
+ *                        properties:
+ *                          id:
+ *                            type: integer
+ *                            example: 10
+ *                          preferenceId:
+ *                            type: string
+ *                            example: 383108109-22e33948-19d2-482e-947f-a24dd022ed14
+ *                          paymentId:
+ *                            type: string
+ *                            example: 383108109-22e33948-19d2-482e-947f-a24dd022ed14
+ *                          confirmCode:
+ *                            type: string
+ *                            example: 4256
+ *                          status:
+ *                            type: string
+ *                            example: "pending"
+ *                          createdAt:
+ *                            type: string
+ *                            example: "2025-11-15"
  *       401:
  *         description: Usuario no autenticado o sin permisos
  *         content:

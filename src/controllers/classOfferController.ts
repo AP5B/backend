@@ -108,7 +108,7 @@ export const getClassOffersController = async (req: Request, res: Response) => {
   const query: classOfferQuery = {};
 
   // sanitizando
-  const { title, category, price, minPrice, maxPrice } = req.query;
+  const { title, category, price, minPrice, maxPrice, name } = req.query;
 
   if (typeof title === "string") query.title = title;
   if (typeof price === "string") {
@@ -125,6 +125,14 @@ export const getClassOffersController = async (req: Request, res: Response) => {
   }
   if (typeof category === "string" && categories.includes(category as Category))
     query.category = category as Category;
+
+  if (
+    typeof name === "string" &&
+    name.trim().length < 30 &&
+    name.trim().length > 0
+  ) {
+    query.name = name.trim();
+  }
 
   console.log(query);
 
@@ -144,8 +152,6 @@ export const getClassOfferByIdController = async (
   const limit = parseInt(req.query.reviewsLimit as string) || 5;
   const normPage = page > 0 ? page : 1;
   const normLimit = limit > 0 ? limit : 5;
-  const userId = res.locals.user?.id || null;
-  console.log(userId);
 
   if (!classId) throw new HttpError(400, "Id de la oferta de clase faltante.");
 
@@ -153,7 +159,6 @@ export const getClassOfferByIdController = async (
     classId,
     normPage,
     normLimit,
-    userId,
   );
 
   res.status(200).json(classOffer);

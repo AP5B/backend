@@ -37,6 +37,7 @@ export interface classOfferQuery {
   price?: number;
   minPrice?: number;
   maxPrice?: number;
+  name?: string;
 }
 
 /**
@@ -63,6 +64,85 @@ export const getClassOffersService = async (
       };
     }
 
+    const searchKey = query.name?.trim() || undefined;
+    const searchWords = searchKey?.trim().split(/\s+/) ?? [];
+    const filterTeacherName = {
+      author: searchKey
+        ? {
+            OR: [
+              {
+                username: {
+                  contains: searchKey,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                first_name: {
+                  contains: searchKey,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                last_name_1: {
+                  contains: searchKey,
+                  mode: "insensitive" as const,
+                },
+              },
+              ...(searchWords.length > 1
+                ? [
+                    {
+                      AND: searchWords.map((word) => ({
+                        OR: [
+                          {
+                            first_name: {
+                              contains: word,
+                              mode: "insensitive" as const,
+                            },
+                          },
+                          {
+                            last_name_1: {
+                              contains: word,
+                              mode: "insensitive" as const,
+                            },
+                          },
+                          {
+                            username: {
+                              contains: word,
+                              mode: "insensitive" as const,
+                            },
+                          },
+                        ],
+                      })),
+                    },
+                  ]
+                : []),
+              ...searchWords.map((word) => ({
+                OR: [
+                  {
+                    username: {
+                      contains: word,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    first_name: {
+                      contains: word,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    last_name_1: {
+                      contains: word,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                ],
+              })),
+            ],
+          }
+        : {},
+    };
+
     const filter = {
       ...(query.title
         ? {
@@ -75,6 +155,7 @@ export const getClassOffersService = async (
       ...(query.category ? { category: query.category } : {}),
       ...(filterPrice ? { price: filterPrice } : {}),
       isDeleted: false,
+      ...(filterTeacherName ? filterTeacherName : {}),
     };
 
     // query
@@ -127,6 +208,7 @@ export const getClassOffersService = async (
     return final;
   } catch (error) {
     console.log(error);
+    if (error instanceof HttpError) throw error;
     throw new HttpError(500, "Error interno del servidor");
   }
 };
@@ -135,7 +217,6 @@ export const getClassOfferByIdService = async (
   classId: number,
   reviewsPage: number,
   reviewsLimit: number,
-  userId: number | null,
 ) => {
   try {
     const offset = (reviewsPage - 1) * reviewsLimit;
@@ -151,19 +232,6 @@ export const getClassOfferByIdService = async (
         price: true,
         createdAt: true,
         category: true,
-        ...(userId
-          ? {
-              classRequests: {
-                where: { userId },
-                select: {
-                  state: true,
-                  day: true,
-                  slot: true,
-                  id: true,
-                },
-              },
-            }
-          : {}),
         author: {
           select: {
             id: true,
@@ -232,6 +300,7 @@ export const getClassOfferByIdService = async (
       author: authorInfo,
     };
   } catch (error) {
+    console.log(error);
     if (error instanceof HttpError) throw error;
     throw new HttpError(500, "Error interno del servidor");
   }
