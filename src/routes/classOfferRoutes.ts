@@ -144,6 +144,12 @@ router.get(
  *         schema:
  *           type: number
  *         description: Precio máximo.
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Nombre, primer apellido o username del profesor.
+ *
  *     responses:
  *       200:
  *         description: Registros encontrados.

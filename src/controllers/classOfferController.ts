@@ -108,7 +108,7 @@ export const getClassOffersController = async (req: Request, res: Response) => {
   const query: classOfferQuery = {};
 
   // sanitizando
-  const { title, category, price, minPrice, maxPrice } = req.query;
+  const { title, category, price, minPrice, maxPrice, name } = req.query;
 
   if (typeof title === "string") query.title = title;
   if (typeof price === "string") {
@@ -125,6 +125,14 @@ export const getClassOffersController = async (req: Request, res: Response) => {
   }
   if (typeof category === "string" && categories.includes(category as Category))
     query.category = category as Category;
+
+  if (
+    typeof name === "string" &&
+    name.trim().length < 30 &&
+    name.trim().length > 0
+  ) {
+    query.name = name.trim();
+  }
 
   console.log(query);
 

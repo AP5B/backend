@@ -332,6 +332,136 @@ describe("Class Offer endpoints", () => {
       expect(response.status).toBe(200);
       expect(response.body.data[0].title).toContain(TITLE);
     });
+
+    it("Should return default pagination (page=1, limit=10) when no query params are provided", async () => {
+      if (!testServer || !prisma) return;
+
+      const response = await studentAgent.get("/class-offer");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBeGreaterThan(0);
+      expect(response.body.data.length).toBeLessThanOrEqual(10);
+    });
+
+    it("Should return empty data if page exceeds total results", async () => {
+      if (!testServer || !prisma) return;
+
+      const response = await studentAgent.get("/class-offer?page=99&limit=5");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(0);
+    });
+
+    it("Should normalize negative page numbers to page=1", async () => {
+      if (!testServer || !prisma) return;
+
+      const response = await studentAgent.get("/class-offer?page=-5&limit=2");
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBe(2);
+    });
+
+    it("Should normalize negative limit to limit=10", async () => {
+      if (!testServer || !prisma) return;
+
+      const response = await studentAgent.get("/class-offer?page=1&limit=-10");
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBeGreaterThan(0);
+    });
+
+    it("Should correctly paginate (page=2 gives different elements than page=1)", async () => {
+      if (!testServer || !prisma) return;
+
+      const page1 = await studentAgent.get("/class-offer?page=1&limit=2");
+      const page2 = await studentAgent.get("/class-offer?page=2&limit=2");
+
+      expect(page1.status).toBe(200);
+      expect(page2.status).toBe(200);
+
+      expect(page1.body.data.length).toBeGreaterThan(0);
+      expect(page2.body.data.length).toBeGreaterThan(0);
+
+      const idsPage1 = page1.body.data.map((o: any) => o.id);
+      const idsPage2 = page2.body.data.map((o: any) => o.id);
+
+      expect(idsPage1).not.toEqual(idsPage2);
+    });
+
+    it("Should return empty array if filters exclude all class offers", async () => {
+      if (!testServer || !prisma) return;
+
+      const response = await studentAgent.get(
+        "/class-offer?title=ZZZ_TITLE_DOES_NOT_EXIST",
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(0);
+    });
+
+    it("Should filter by exact price", async () => {
+      if (!testServer || !prisma) return;
+
+      const response = await studentAgent.get("/class-offer?price=10000");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBeGreaterThan(0);
+      expect(response.body.data[0].price).toBe(10000);
+    });
+
+    it("Should ignore non-numeric price filters gracefully", async () => {
+      if (!testServer || !prisma) return;
+
+      const response = await studentAgent.get("/class-offer?price=notanumber");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBeGreaterThan(0);
+    });
+
+    it("Should search by teacher name (first_name)", async () => {
+      if (!testServer || !prisma) return;
+
+      const NAME = testTeacherUser?.first_name || "Login";
+      const response = await studentAgent.get(`/class-offer?name=${NAME}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBeGreaterThan(0);
+      expect(response.body.data[0].author.first_name).toContain(NAME);
+    });
+
+    it("Should search by teacher name with multiple words AND logic", async () => {
+      if (!testServer || !prisma) return;
+
+      const MULTI = `${testTeacherUser?.first_name} ${testTeacherUser?.last_name_1}`;
+
+      const response = await studentAgent.get(`/class-offer?name=${MULTI}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBeGreaterThan(0);
+    });
+
+    it("Should not accept name longer than 30 characters", async () => {
+      if (!testServer || !prisma) return;
+
+      const response = await studentAgent.get(
+        "/class-offer?name=sooooooooooooooooooooooooooooooooolong",
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBeGreaterThan(0);
+    });
+
+    it("Should respect category + price combined filters", async () => {
+      if (!testServer || !prisma) return;
+
+      const response = await studentAgent.get(
+        "/class-offer?category=Calculo&minPrice=9000&maxPrice=20000",
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBe(1);
+      expect(response.body.data[0].category).toBe("Calculo");
+      expect(response.body.data[0].price).toBeGreaterThanOrEqual(9000);
+      expect(response.body.data[0].price).toBeLessThanOrEqual(20000);
+    });
   });
 
   describe("DELETE /class-offer/{classId}", () => {
