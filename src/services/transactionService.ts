@@ -1,5 +1,5 @@
 import env from "../config/env";
-import { ClassRequestState, User } from "@prisma/client";
+import { ClassRequestState, MercadopagoInfo, User } from "@prisma/client";
 import PrismaManager from "../utils/prismaManager";
 import {
   MercadoPagoConfig,
@@ -13,7 +13,7 @@ const client = new MercadoPagoConfig({
   accessToken: env.mp_access_token,
   options: { timeout: 5000 },
 });
-const preference = new Preference(client);
+// const preference = new Preference(client);
 const oauth = new OAuth(client);
 const paymetRefund = new PaymentRefund(client);
 
@@ -138,10 +138,19 @@ export const getPreferenceService = async (
     const classRequest = await prisma.classRequest.findFirst({
       where: { id: classRequestId },
       include: {
+        classOffer: {
+          include: {
+            author: {
+              include: {
+                mercadopagoInfo: true,
+              },
+            },
+          },
+        },
         transactions: {
           orderBy: { createdAt: "desc" },
           where: {
-            status: { in: ["pending", "approved"] },
+            status: { in: ["pending"] },
           },
         },
       },
@@ -150,7 +159,7 @@ export const getPreferenceService = async (
     if (!classRequest)
       throw new HttpError(
         404,
-        `Class Request con id ${classRequestId} no encontrada`,
+        "Class Request con id ${ classRequestId } no encontrada",
       );
     if (userId !== classRequest?.userId)
       throw new HttpError(
@@ -168,7 +177,17 @@ export const getPreferenceService = async (
       transaction = res.transaction;
       pref = res.preference;
     } else {
-      pref = await preference.get({ preferenceId: transaction.preferenceId });
+      const teacherMearcadopago = classRequest.classOffer.author
+        .mercadopagoInfo as MercadopagoInfo;
+
+      const authorClient = new MercadoPagoConfig({
+        accessToken: teacherMearcadopago.accessToken,
+      });
+
+      const authorPreference = new Preference(authorClient);
+      pref = await authorPreference.get({
+        preferenceId: transaction.preferenceId,
+      });
     }
 
     return {
@@ -177,7 +196,6 @@ export const getPreferenceService = async (
       status: transaction.status,
     };
   } catch (error) {
-    console.log(error);
     if (error instanceof HttpError) {
       throw error;
     }
