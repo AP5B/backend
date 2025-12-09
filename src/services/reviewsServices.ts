@@ -5,7 +5,7 @@ const prisma = PrismaManager.GetClient();
 
 export interface reviewRequestBody {
   rating: number;
-  content?: string;
+  content: string;
 }
 
 export interface editedReviewRequestBody {
@@ -41,6 +41,7 @@ export const createReviewService = async (
         teacherId: teacherId,
         reviewerId: reviewerId,
       },
+      select: { id: true },
     });
 
     if (review) {

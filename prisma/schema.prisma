@@ -110,7 +110,7 @@ model Review {
   teacherId   Int
   teacher     User      @relation("Teacher", fields: [teacherId], references: [id], onDelete: Cascade)
   rating      Int
-  content     String?
+  content     String
   createdAt   DateTime  @default(now()) @db.Timestamp(0)
 }
 
