@@ -13,7 +13,7 @@
     "dev": "DEBUG=myapp:* nodemon --watch 'src/**/*.ts' --exec 'tsx' src/index.ts",
     "lint": "eslint 'src/**/*.ts'",
     "db:deploy": "npx prisma migrate deploy && npx prisma generate",
-    "prepare": "if [ \"$NODE_ENV\" = \"development\" ]; then husky install; fi",
+    "prepare": "node -e \"process.env.NODE_ENV==='development' && require('child_process').execSync('husky install',{stdio:'inherit'})\"",
     "test": "cross-env NODE_ENV=test jest --runInBand --coverage",
     "test:only": "cross-env NODE_ENV=test jest --runInBand"
   },
