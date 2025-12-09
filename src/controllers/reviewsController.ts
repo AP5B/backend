@@ -34,20 +34,29 @@ export const createReviewController = async (req: Request, res: Response) => {
     throw new HttpError(400, "La puntuación debe estar entre 1 y 5");
   }
 
-  const sanitizedBody: reviewRequestBody = { rating: reqBody.rating };
-  if (reqBody.content) {
-    if (reqBody.content.trim().length > 1000) {
-      throw new HttpError(
-        400,
-        "Cuerpo de la review no puede superar los 1000 caracteres.",
-      );
-    }
-    const regex = /\D/;
-    if (!regex.test(reqBody.content.trim())) {
-      throw new HttpError(400, "Formato del cuerpo de la review inválido.");
-    }
-    sanitizedBody.content = reqBody.content.trim();
+  if (!reqBody.content) {
+    throw new HttpError(400, "No se puede crear una reseña vacía.");
   }
+
+  if (
+    reqBody.content.trim().length < 1 ||
+    reqBody.content.trim().length > 1000
+  ) {
+    throw new HttpError(
+      400,
+      "Cuerpo de la review debe tener entre 1 y 1000 caracteres.",
+    );
+  }
+
+  const regex = /\D/;
+  if (!regex.test(reqBody.content.trim())) {
+    throw new HttpError(400, "Formato del cuerpo de la review inválido.");
+  }
+
+  const sanitizedBody: reviewRequestBody = {
+    rating: reqBody.rating,
+    content: reqBody.content.trim(),
+  };
 
   const newReview = await createReviewService(sanitizedBody, teacherId, userId);
 

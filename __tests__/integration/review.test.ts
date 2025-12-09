@@ -143,7 +143,7 @@ describe("Review endpoints", () => {
       });
     });
 
-    it("Should create a review successfully with rating only", async () => {
+    it("Should return 400 if no content for the review is provided", async () => {
       if (!testStudentUser || !testTeacherUser || !prisma) return;
 
       await prisma.review.deleteMany({
@@ -158,10 +158,8 @@ describe("Review endpoints", () => {
         .post(`/reviews/${testTeacherUser.id}`)
         .send(payload);
 
-      expect(response.status).toBe(200);
-      expect(response.body.review).toMatchObject({
-        rating: payload.rating,
-      });
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("No se puede crear una reseña vacía.");
     });
 
     it("Should not allow creating review for self", async () => {
@@ -227,7 +225,7 @@ describe("Review endpoints", () => {
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
-        "Formato del cuerpo de la review inválido.",
+        "Cuerpo de la review debe tener entre 1 y 1000 caracteres.",
       );
     });
   });
