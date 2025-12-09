@@ -917,7 +917,7 @@ router.post(
 
 /**
  * @swagger
- * /class-requests/{classRequestId}:
+ * /class-requests/details/{classRequestId}:
  *   get:
  *     summary: Obtener una reserva específica por su ID
  *     description: >
@@ -1017,7 +1017,7 @@ router.post(
  *         description: Error interno del servidor.
  */
 router.get(
-  "/:classRequestId",
+  "/details/:classRequestId",
   authenticate,
   checkUserIsDeleted,
   autorize("Student"),
