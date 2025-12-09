@@ -1,7 +1,9 @@
-import { ClassRequestState } from "@prisma/client";
+import { ClassRequestState, MercadopagoInfo } from "@prisma/client";
 import { HttpError } from "../middlewares/errorHandler";
 import PrismaManager from "../utils/prismaManager";
 import { createPreferenceService } from "./transactionService";
+import MercadoPagoConfig, { Preference } from "mercadopago";
+import { PreferenceResponse } from "mercadopago/dist/clients/preference/commonTypes";
 
 const prisma = PrismaManager.GetClient();
 
@@ -159,7 +161,7 @@ export const getUserClassRequestService = async (
     const offset = (page - 1) * limit;
 
     // Buscar reservas con datos de la clase
-    const classRequests = await prisma.classRequest.findMany({
+    const classRequestsRaw = await prisma.classRequest.findMany({
       where: { userId },
       select: {
         id: true,
@@ -189,6 +191,7 @@ export const getUserClassRequestService = async (
                 first_name: true,
                 last_name_1: true,
                 isDeleted: true,
+                mercadopagoInfo: true,
               },
             },
           },
@@ -201,13 +204,48 @@ export const getUserClassRequestService = async (
       take: limit,
     });
 
-    for (const req of classRequests) {
+    const classRequests = [];
+
+    for (const req of classRequestsRaw) {
+      if (!req) continue;
       const transaction = req.transactions[0];
-      // El estudiante tiene que pagar pero aun no se ha creado la preferencia
+
+      let pref: PreferenceResponse | undefined;
+      let sanPref: Partial<PreferenceResponse> = {};
       if (!transaction && req.state === ClassRequestState.PaymentPending) {
-        const pref = await createPreferenceService(req.id, userId);
-        req.transactions[0] = pref.transaction;
+        const res = await createPreferenceService(req.id, userId);
+        pref = res.preference;
+      } else if (
+        transaction &&
+        req.state === ClassRequestState.PaymentPending
+      ) {
+        const teacherMearcadopago = req.classOffer.author
+          .mercadopagoInfo as MercadopagoInfo;
+
+        const authorClient = new MercadoPagoConfig({
+          accessToken: teacherMearcadopago.accessToken,
+        });
+
+        const authorPreference = new Preference(authorClient);
+        const res = await authorPreference.get({
+          preferenceId: transaction.preferenceId,
+        });
+        pref = res;
       }
+
+      if (pref) {
+        sanPref = {
+          init_point: pref?.init_point ?? "",
+          items: pref?.items ?? [],
+          date_created: pref?.date_created ?? "",
+          client_id: pref?.client_id ?? "",
+        };
+      }
+
+      classRequests.push({
+        ...req,
+        preference: sanPref ? pref : null,
+      });
     }
 
     const formattedClassRequests = classRequests.map((classReq) => {
