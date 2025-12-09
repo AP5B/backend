@@ -3,6 +3,7 @@ import { HttpError } from "../middlewares/errorHandler";
 import PrismaManager from "../utils/prismaManager";
 import { createPreferenceService } from "./transactionService";
 import MercadoPagoConfig, { Preference } from "mercadopago";
+import { PreferenceResponse } from "mercadopago/dist/clients/preference/commonTypes";
 
 const prisma = PrismaManager.GetClient();
 
@@ -209,7 +210,8 @@ export const getUserClassRequestService = async (
       if (!req) continue;
       const transaction = req.transactions[0];
 
-      let pref;
+      let pref: PreferenceResponse | undefined;
+      let sanPref: Partial<PreferenceResponse> = {};
       if (!transaction && req.state === ClassRequestState.PaymentPending) {
         const res = await createPreferenceService(req.id, userId);
         pref = res.preference;
@@ -231,16 +233,20 @@ export const getUserClassRequestService = async (
         pref = res;
       }
 
+      if (pref) {
+        sanPref = {
+          init_point: pref?.init_point ?? "",
+          items: pref?.items ?? [],
+          date_created: pref?.date_created ?? "",
+          client_id: pref?.client_id ?? "",
+        };
+      }
+
       classRequests.push({
         ...req,
-        preference: pref ? pref : null,
+        preference: sanPref ? pref : null,
       });
     }
-
-    console.log("classRequestRaw");
-    console.log(classRequestsRaw);
-    console.log("classRequest");
-    console.log(classRequests);
 
     const formattedClassRequests = classRequests.map((classReq) => {
       const formattedCreatedAt = classReq.createdAt.toISOString().split("T")[0];
