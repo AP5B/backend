@@ -1,7 +1,8 @@
-import { ClassRequestState } from "@prisma/client";
+import { ClassRequestState, MercadopagoInfo } from "@prisma/client";
 import { HttpError } from "../middlewares/errorHandler";
 import PrismaManager from "../utils/prismaManager";
 import { createPreferenceService } from "./transactionService";
+import MercadoPagoConfig, { Preference } from "mercadopago";
 
 const prisma = PrismaManager.GetClient();
 
@@ -159,7 +160,7 @@ export const getUserClassRequestService = async (
     const offset = (page - 1) * limit;
 
     // Buscar reservas con datos de la clase
-    const classRequests = await prisma.classRequest.findMany({
+    const classRequestsRaw = await prisma.classRequest.findMany({
       where: { userId },
       select: {
         id: true,
@@ -189,6 +190,7 @@ export const getUserClassRequestService = async (
                 first_name: true,
                 last_name_1: true,
                 isDeleted: true,
+                mercadopagoInfo: true,
               },
             },
           },
@@ -201,13 +203,39 @@ export const getUserClassRequestService = async (
       take: limit,
     });
 
-    for (const req of classRequests) {
+    const classRequests = [];
+
+    for (let i = 0; i < classRequests.length; i++) {
+      const req = classRequestsRaw[i];
+      if (!req) continue;
       const transaction = req.transactions[0];
-      // El estudiante tiene que pagar pero aun no se ha creado la preferencia
+
+      let pref;
       if (!transaction && req.state === ClassRequestState.PaymentPending) {
-        const pref = await createPreferenceService(req.id, userId);
-        req.transactions[0] = pref.transaction;
+        const res = await createPreferenceService(req.id, userId);
+        pref = res.preference;
+      } else if (
+        transaction &&
+        req.state === ClassRequestState.PaymentPending
+      ) {
+        const teacherMearcadopago = req.classOffer.author
+          .mercadopagoInfo as MercadopagoInfo;
+
+        const authorClient = new MercadoPagoConfig({
+          accessToken: teacherMearcadopago.accessToken,
+        });
+
+        const authorPreference = new Preference(authorClient);
+        const res = await authorPreference.get({
+          preferenceId: transaction.preferenceId,
+        });
+        pref = res;
       }
+
+      classRequests[i] = {
+        ...req,
+        preference: pref,
+      };
     }
 
     const formattedClassRequests = classRequests.map((classReq) => {
