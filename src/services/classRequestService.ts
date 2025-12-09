@@ -205,8 +205,7 @@ export const getUserClassRequestService = async (
 
     const classRequests = [];
 
-    for (let i = 0; i < classRequests.length; i++) {
-      const req = classRequestsRaw[i];
+    for (const req of classRequestsRaw) {
       if (!req) continue;
       const transaction = req.transactions[0];
 
@@ -232,11 +231,16 @@ export const getUserClassRequestService = async (
         pref = res;
       }
 
-      classRequests[i] = {
+      classRequests.push({
         ...req,
         preference: pref,
-      };
+      });
     }
+
+    console.log("classRequestRaw");
+    console.log(classRequestsRaw);
+    console.log("classRequest");
+    console.log(classRequests);
 
     const formattedClassRequests = classRequests.map((classReq) => {
       const formattedCreatedAt = classReq.createdAt.toISOString().split("T")[0];
