@@ -233,7 +233,7 @@ export const getUserClassRequestService = async (
 
       classRequests.push({
         ...req,
-        preference: pref,
+        preference: pref ? pref : null,
       });
     }
 
