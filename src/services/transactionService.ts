@@ -88,9 +88,9 @@ export const createPreferenceService = async (
     const pref = await userPreference.create({
       body: {
         back_urls: {
-          success: `${env.backend_url}/transactions/wh/success/${classRequest.classOfferId}/`,
-          failure: `${env.backend_url}/transactions/wh/failure/${classRequest.classOfferId}/`,
-          pending: `${env.backend_url}/transactions/wh/pending/${classRequest.classOfferId}/`,
+          success: `${env.backend_url}/transactions/wh/success/${classRequest.id}/`,
+          failure: `${env.backend_url}/transactions/wh/failure/${classRequest.id}/`,
+          pending: `${env.backend_url}/transactions/wh/pending/${classRequest.id}/`,
         },
         auto_return: "approved",
         items: [
