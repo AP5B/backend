@@ -341,6 +341,8 @@ router.post(
  *                               isDeleted:
  *                                 type: bool
  *                                 example: false
+ *                               email:
+ *                                 type: string
  *                       transaction:
  *                         type: object
  *                         properties:

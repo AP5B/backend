@@ -195,6 +195,7 @@ export const getUserClassRequestService = async (
                 first_name: true,
                 last_name_1: true,
                 isDeleted: true,
+                email: true,
                 mercadopagoInfo: true,
               },
             },
