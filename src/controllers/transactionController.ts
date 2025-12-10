@@ -142,5 +142,5 @@ export const webhookPaymentController = async (req: Request, res: Response) => {
 
   await redirectHandlerService(classRequestId, payload);
 
-  res.redirect(`${env.frontend_url}/courses/${classRequestId}`);
+  res.redirect(`${env.frontend_url}/myrequests`);
 };
