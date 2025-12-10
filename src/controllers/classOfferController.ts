@@ -54,6 +54,9 @@ const validateClassOfferBody = (body: classOfferRequestBody) => {
   if (!body.price) throw new HttpError(400, "El precio no puede estar vacío");
   if (typeof body.price != "number")
     throw new HttpError(400, "El precio debe ser un numero");
+  if (body.price < 50 || body.price > 50000) {
+    throw new HttpError(400, "Precio fuera de rango (50 - 50000)");
+  }
   if (body.category && !categories.includes(body.category))
     throw new HttpError(400, "Categoría invalida");
 };
@@ -95,6 +98,9 @@ const validateEditClassOfferRequestBody = (body: editClassOfferRequestBody) => {
     );
   if (body.price !== undefined && typeof body.price != "number")
     throw new HttpError(400, "El precio debe ser un numero");
+  if (body.price !== undefined && (body.price < 50 || body.price > 50000)) {
+    throw new HttpError(400, "Precio fuera de rango (50 - 50000)");
+  }
   if (body.category !== undefined && !categories.includes(body.category))
     throw new HttpError(400, "Categoría invalida");
 };
