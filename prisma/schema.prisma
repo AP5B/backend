@@ -80,16 +80,17 @@ model ClassOffer {
 }
 
 model ClassRequest {
-  id            Int                @id @default(autoincrement())
-  classOfferId  Int
-  classOffer    ClassOffer         @relation(fields: [classOfferId], references: [id], onDelete: Cascade)
-  userId        Int
-  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  state         ClassRequestState  @default(Created)
-  createdAt     DateTime           @default(now())
-  day           Int
-  slot          Int
-  transactions  Transaction[]
+  id              Int                @id @default(autoincrement())
+  classOfferId    Int
+  classOffer      ClassOffer         @relation(fields: [classOfferId], references: [id], onDelete: Cascade)
+  userId          Int
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  state           ClassRequestState  @default(Created)
+  createdAt       DateTime           @default(now())
+  day             Int
+  slot            Int
+  transactions    Transaction[]
+  priceCreatedAt  Int
 }
 
 model Transaction {

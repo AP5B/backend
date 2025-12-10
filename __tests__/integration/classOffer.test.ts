@@ -122,7 +122,7 @@ describe("Class Offer endpoints", () => {
       data: {
         title: "Clase a eliminar",
         description: "Esta clase de va a eliminar",
-        price: 200000,
+        price: 5000,
         authorId: testTeacherUser.id,
       },
     });
@@ -460,7 +460,7 @@ describe("Class Offer endpoints", () => {
       expect(response.body.data.length).toBe(1);
       expect(response.body.data[0].category).toBe("Calculo");
       expect(response.body.data[0].price).toBeGreaterThanOrEqual(9000);
-      expect(response.body.data[0].price).toBeLessThanOrEqual(20000);
+      expect(response.body.data[0].price).toBeLessThanOrEqual(10000);
     });
   });
 
