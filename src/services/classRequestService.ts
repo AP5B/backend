@@ -66,6 +66,7 @@ export const createClassRequestService = async (
       where: { id: body.classOfferId, isDeleted: false },
       select: {
         authorId: true,
+        price: true,
       },
     });
 
@@ -104,6 +105,7 @@ export const createClassRequestService = async (
         userId: userId,
         day: body.day,
         slot: body.slot,
+        priceCreatedAt: classOffer.price,
       },
       select: {
         id: true,
@@ -111,6 +113,7 @@ export const createClassRequestService = async (
         slot: true,
         createdAt: true,
         state: true,
+        priceCreatedAt: true,
         classOffer: {
           select: {
             title: true,
@@ -169,6 +172,7 @@ export const getUserClassRequestService = async (
         slot: true,
         createdAt: true,
         state: true,
+        priceCreatedAt: true,
         transactions: {
           orderBy: { createdAt: "desc" },
           where: {
@@ -290,6 +294,7 @@ export const getTutorClassRequestsService = async (
         day: true,
         slot: true,
         createdAt: true,
+        priceCreatedAt: true,
         user: {
           select: {
             username: true,
@@ -444,6 +449,7 @@ export const getClassRequestsByClassService = async (
         day: true,
         slot: true,
         createdAt: true,
+        priceCreatedAt: true,
         user: {
           select: {
             username: true,
@@ -552,6 +558,7 @@ export const getClassRequestByIdService = async (classRequestId: number) => {
         slot: true,
         createdAt: true,
         state: true,
+        priceCreatedAt: true,
         classOffer: {
           select: {
             title: true,
@@ -597,6 +604,7 @@ export const getUserReqInClassOfferService = async (
         slot: true,
         createdAt: true,
         state: true,
+        priceCreatedAt: true,
         classOffer: {
           select: {
             title: true,
@@ -609,14 +617,68 @@ export const getUserReqInClassOfferService = async (
                 first_name: true,
                 last_name_1: true,
                 isDeleted: true,
+                mercadopagoInfo: true,
               },
             },
+          },
+        },
+        transactions: {
+          orderBy: { createdAt: "desc" },
+          where: {
+            status: { in: ["pending", "approved"] },
+          },
+          omit: {
+            classRequestId: true,
           },
         },
       },
     });
 
-    const formattedClassRequests = classReqs.map((classReq) => {
+    const classRequests = [];
+
+    for (const req of classReqs) {
+      if (!req) continue;
+      const transaction = req.transactions[0];
+
+      let pref: PreferenceResponse | undefined;
+      let sanPref: Partial<PreferenceResponse> = {};
+      if (!transaction && req.state === ClassRequestState.PaymentPending) {
+        const res = await createPreferenceService(req.id, userId);
+        pref = res.preference;
+      } else if (
+        transaction &&
+        req.state === ClassRequestState.PaymentPending
+      ) {
+        const teacherMearcadopago = req.classOffer.author
+          .mercadopagoInfo as MercadopagoInfo;
+
+        const authorClient = new MercadoPagoConfig({
+          accessToken: teacherMearcadopago.accessToken,
+        });
+
+        const authorPreference = new Preference(authorClient);
+        const res = await authorPreference.get({
+          preferenceId: transaction.preferenceId,
+        });
+        pref = res;
+      }
+
+      if (pref) {
+        sanPref = {
+          init_point: pref?.init_point ?? "",
+          items: pref?.items ?? [],
+          date_created: pref?.date_created ?? "",
+          client_id: pref?.client_id ?? "",
+        };
+      }
+
+      classRequests.push({
+        ...req,
+        preference: sanPref ? pref : null,
+      });
+    }
+
+    const formattedClassRequests = classRequests.map((classReq) => {
       const formattedCreatedAt = classReq.createdAt.toISOString().split("T")[0];
       return { ...classReq, createdAt: formattedCreatedAt };
     });

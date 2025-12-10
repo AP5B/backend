@@ -154,6 +154,9 @@ router.get(
  *                     state:
  *                       type: string
  *                       example: "Pending"
+ *                     priceCreatedAt:
+ *                       type: integer
+ *                       example: 15000
  *                     classOffer:
  *                       type: object
  *                       properties:
@@ -300,6 +303,9 @@ router.post(
  *                       state:
  *                         type: string
  *                         example: "Pending"
+ *                       priceCreatedAt:
+ *                         type: integer
+ *                         example: 100
  *                       classOffer:
  *                         type: object
  *                         properties:
@@ -487,6 +493,9 @@ router.get(
  *                       createdAt:
  *                         type: string
  *                         example: "2025-11-15"
+ *                       priceCreatedAt:
+ *                         type: integer
+ *                         example: 15000
  *                       user:
  *                         type: object
  *                         properties:
@@ -727,6 +736,7 @@ router.patch(
  *                       day: { type: integer, example: 4 }
  *                       slot: { type: integer, example: 2 }
  *                       createdAt: { type: string, example: "2025-11-15" }
+ *                       priceCreatedAt: { type: integer, example: 100 }
  *                       user:
  *                         type: object
  *                         properties:
@@ -998,6 +1008,8 @@ router.post(
  *                     state:
  *                       type: string
  *                       example: "PENDING"
+ *                     priceCreatedAt:
+ *                       type: number
  *                     classOffer:
  *                       type: object
  *                       properties:
@@ -1114,6 +1126,8 @@ router.get(
  *                       state:
  *                         type: string
  *                         example: "Pending"
+ *                       priceCreatedAt:
+ *                         type: number
  *                       classOffer:
  *                         type: object
  *                         properties:
@@ -1138,6 +1152,65 @@ router.get(
  *                               isDeleted:
  *                                 type: boolean
  *                                 example: false
+ *                       transaction:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 10
+ *                           preferenceId:
+ *                             type: string
+ *                             example: 383108109-22e33948-19d2-482e-947f-a24dd022ed14
+ *                           paymentId:
+ *                             type: string
+ *                             example: 383108109-22e33948-19d2-482e-947f-a24dd022ed14
+ *                           confirmCode:
+ *                             type: string
+ *                             example: 4256
+ *                           status:
+ *                             type: string
+ *                             example: "pending"
+ *                           createdAt:
+ *                             type: string
+ *                             example: "2025-11-15"
+ *                       preference:
+ *                         type: object
+ *                         properties:
+ *                           init_point:
+ *                             type: string
+ *                             example: "https://www.mercadopago.cl/checkout/v1/redirect?pref_id=383108109-55f452f5-2a9b-4558-badb-875c54c8508f"
+ *                           items:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 id:
+ *                                   type: string
+ *                                   example: "3"
+ *                                 category_id:
+ *                                   type: string
+ *                                   example: ""
+ *                                 currency_id:
+ *                                   type: string
+ *                                   example: "CLP"
+ *                                 description:
+ *                                   type: string
+ *                                   example: "descripcion"
+ *                                 title:
+ *                                   type: string
+ *                                   example: "titulo de la clase"
+ *                                 quantity:
+ *                                   type: integer
+ *                                   example: 1
+ *                                 unit_price:
+ *                                   type: number
+ *                                   example: 10
+ *                           date_created:
+ *                             type: string
+ *                             example: 2025-12-08T17:22:57.303-04:00
+ *                           client_id:
+ *                             type: string
+ *                             example: 5835900693347270
  *       400:
  *         description: ID de la clase faltante o inválido.
  *         content:

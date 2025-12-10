@@ -149,6 +149,7 @@ describe("Class Offer endpoints", () => {
       expect(response.body.reservation.day).toBe(3);
       expect(response.body.reservation.slot).toBe(10);
       expect(response.body.reservation.classOffer.title).toBe("Cálculo I");
+      expect(response.body.reservation.priceCreatedAt).toBe(classOffer1.price);
     });
 
     it("should return 400 if classOfferId is missing", async () => {
@@ -238,6 +239,7 @@ describe("Class Offer endpoints", () => {
           userId: testStudentUser.id,
           day: 2,
           slot: 8,
+          priceCreatedAt: offer.price,
         },
       });
 
@@ -299,6 +301,7 @@ describe("Class Offer endpoints", () => {
           classOfferId: classOffer1.id,
           day: 2,
           slot: 8,
+          priceCreatedAt: classOffer1.price,
         },
       });
 
@@ -308,6 +311,7 @@ describe("Class Offer endpoints", () => {
           classOfferId: classOffer2.id,
           day: 4,
           slot: 12,
+          priceCreatedAt: classOffer2.price,
         },
       });
 
@@ -335,18 +339,21 @@ describe("Class Offer endpoints", () => {
             classOfferId: classOffer1.id,
             day: 1,
             slot: 8,
+            priceCreatedAt: classOffer1.price,
           },
           {
             userId: testStudentUser.id,
             classOfferId: classOffer1.id,
             day: 2,
             slot: 9,
+            priceCreatedAt: classOffer1.price,
           },
           {
             userId: testStudentUser.id,
             classOfferId: classOffer1.id,
             day: 3,
             slot: 10,
+            priceCreatedAt: classOffer1.price,
           },
         ],
       });
@@ -375,6 +382,7 @@ describe("Class Offer endpoints", () => {
           classOfferId: classOffer1.id,
           day: 2,
           slot: 8,
+          priceCreatedAt: classOffer1.price,
         },
       });
 
@@ -384,6 +392,7 @@ describe("Class Offer endpoints", () => {
           classOfferId: classOffer1.id,
           day: 3,
           slot: 9,
+          priceCreatedAt: classOffer1.price,
         },
       });
 
@@ -402,6 +411,7 @@ describe("Class Offer endpoints", () => {
           classOfferId: classOffer1.id,
           day: 2,
           slot: 8,
+          priceCreatedAt: classOffer1.price,
         },
       });
 
@@ -449,6 +459,7 @@ describe("Class Offer endpoints", () => {
           classOfferId: classOffer1.id,
           day: 2,
           slot: 8,
+          priceCreatedAt: classOffer1.price,
         },
       });
 
@@ -499,6 +510,7 @@ describe("Class Offer endpoints", () => {
           classOfferId: otherOffer.id,
           day: 3,
           slot: 10,
+          priceCreatedAt: classOffer1.price,
         },
       });
 
@@ -525,18 +537,21 @@ describe("Class Offer endpoints", () => {
             classOfferId: classOffer1.id,
             day: 1,
             slot: 8,
+            priceCreatedAt: classOffer1.price,
           },
           {
             userId: testStudentUser.id,
             classOfferId: classOffer1.id,
             day: 2,
             slot: 9,
+            priceCreatedAt: classOffer1.price,
           },
           {
             userId: testStudentUser.id,
             classOfferId: classOffer1.id,
             day: 3,
             slot: 10,
+            priceCreatedAt: classOffer1.price,
           },
         ],
       });
@@ -565,6 +580,7 @@ describe("Class Offer endpoints", () => {
           classOfferId: classOffer1.id,
           day: 2,
           slot: 8,
+          priceCreatedAt: classOffer1.price,
         },
       });
 
@@ -658,6 +674,7 @@ describe("Class Offer endpoints", () => {
           classOfferId: classOffer1.id,
           day: 3,
           slot: 10,
+          priceCreatedAt: classOffer1.price,
         },
       });
 
@@ -693,6 +710,7 @@ describe("Class Offer endpoints", () => {
           classOfferId: classOffer2.id,
           day: 4,
           slot: 12,
+          priceCreatedAt: classOffer2.price,
         },
       });
 
@@ -714,18 +732,21 @@ describe("Class Offer endpoints", () => {
             classOfferId: classOffer1.id,
             day: 1,
             slot: 8,
+            priceCreatedAt: classOffer1.price,
           },
           {
             userId: testStudentUser.id,
             classOfferId: classOffer1.id,
             day: 2,
             slot: 9,
+            priceCreatedAt: classOffer1.price,
           },
           {
             userId: testStudentUser.id,
             classOfferId: classOffer1.id,
             day: 3,
             slot: 10,
+            priceCreatedAt: classOffer1.price,
           },
         ],
       });
@@ -747,6 +768,7 @@ describe("Class Offer endpoints", () => {
           classOfferId: classOffer1.id,
           day: 2,
           slot: 8,
+          priceCreatedAt: classOffer1.price,
         },
       });
 
